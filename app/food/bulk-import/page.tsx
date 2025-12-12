@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react"
@@ -236,145 +236,141 @@ export default function FoodBulkImportPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
-
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto max-w-3xl p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <Link href="/food">
-              <Button variant="ghost" className="mb-4 gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Food Distribution
-              </Button>
-            </Link>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Bulk Import Food Registrations</h1>
-            <p className="text-muted-foreground">Upload a CSV or Excel (XLSX) file to register multiple participants at once</p>
-          </div>
-
-          {/* Download Template */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Step 1: Download Template</CardTitle>
-              <CardDescription>Download the CSV template and fill in registration information</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="gap-2 bg-transparent">
-                <Download className="h-4 w-4" />
-                Download CSV Template
-              </Button>
-              <div className="mt-4 rounded-lg bg-muted p-4">
-                <p className="mb-2 text-sm font-medium">Required columns (from Google Form):</p>
-                <code className="text-xs text-muted-foreground">
-                  Timestamp, Email Address, Full Name, Trainee ID, Mobile Number, Department, Food Preference
-                </code>
-                <p className="mt-2 text-xs text-muted-foreground">Food Preference values: VEGETARIAN, NON_VEGETARIAN, VEGAN</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Upload File */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Step 2: Upload CSV or Excel File</CardTitle>
-              <CardDescription>Select the filled CSV or XLSX file to import registrations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-12 transition-colors hover:border-primary/50">
-                  <label htmlFor="file-upload" className="cursor-pointer text-center">
-                    <FileSpreadsheet className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                    <div className="mb-2 text-sm font-medium text-foreground">
-                      {file ? file.name : "Click to upload or drag and drop"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">CSV or XLSX file (Max 5MB)</div>
-                    <input id="file-upload" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} className="hidden" />
-                  </label>
-                </div>
-
-                {file && (
-                  <>
-                    {importing && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Importing registrations...</span>
-                          <span className="font-medium">{progress}%</span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full bg-primary transition-all duration-300 ease-out"
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    <Button onClick={handleImport} disabled={importing} className="w-full gap-2">
-                      <Upload className="h-4 w-4" />
-                      {importing ? "Importing..." : "Import Registrations"}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Import Results */}
-          {importResult && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Import Results</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 rounded-lg bg-green-500/10 p-4 text-green-500">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <div>
-                    <div className="font-medium">{importResult.success} registrations imported successfully</div>
-                    <div className="text-sm">QR codes generated automatically</div>
-                  </div>
-                </div>
-
-                {importResult.skipped > 0 && (
-                  <div className="flex items-center gap-3 rounded-lg bg-yellow-500/10 p-4 text-yellow-600">
-                    <AlertCircle className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">{importResult.skipped} duplicates skipped</div>
-                      <div className="text-sm">These entries already exist in the database</div>
-                    </div>
-                  </div>
-                )}
-
-                {importResult.failed > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 rounded-lg bg-destructive/10 p-4 text-destructive">
-                      <AlertCircle className="h-5 w-5" />
-                      <div>
-                        <div className="font-medium">{importResult.failed} rows failed</div>
-                      </div>
-                    </div>
-                    <div className="rounded-lg bg-muted p-4">
-                      <p className="mb-2 text-sm font-medium">Errors:</p>
-                      <ul className="space-y-1 text-xs text-muted-foreground">
-                        {importResult.errors.map((err: any, idx) => (
-                          <li key={idx}>
-                            • {typeof err === 'string' 
-                              ? err 
-                              : `Row ${err.rowNumber}: ${err.error}`}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                <Button onClick={() => router.push("/food")} className="w-full">
-                  View All Registrations
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+    <ResponsiveLayout>
+      <div className="container mx-auto max-w-3xl p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-4 lg:mb-6">
+          <Link href="/food">
+            <Button variant="ghost" className="mb-3 gap-1.5 text-xs lg:mb-4 lg:gap-2 lg:text-sm" size="sm">
+              <ArrowLeft className="h-3 w-3 lg:h-4 lg:w-4" />
+              Back to Food
+            </Button>
+          </Link>
+          <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">Bulk Import</h1>
+          <p className="text-xs text-muted-foreground lg:text-base">Upload CSV or Excel file to register multiple participants</p>
         </div>
-      </main>
-    </div>
+
+        {/* Download Template */}
+        <Card className="mb-4 lg:mb-6">
+          <CardHeader className="p-3 lg:p-6">
+            <CardTitle className="text-base lg:text-xl">Step 1: Download Template</CardTitle>
+            <CardDescription className="text-xs lg:text-sm">Download the CSV template and fill in registration information</CardDescription>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+            <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
+              <Download className="h-3 w-3 lg:h-4 lg:w-4" />
+              Download Template
+            </Button>
+            <div className="mt-3 rounded-lg bg-muted p-2.5 lg:mt-4 lg:p-4">
+              <p className="mb-1.5 text-xs font-medium lg:mb-2 lg:text-sm">Required columns:</p>
+              <code className="text-[10px] text-muted-foreground lg:text-xs">
+                Timestamp, Email, Full Name, Trainee ID, Mobile, Department, Food Preference
+              </code>
+              <p className="mt-1.5 text-[10px] text-muted-foreground lg:mt-2 lg:text-xs">Food Preference: VEGETARIAN, NON_VEGETARIAN, VEGAN</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Upload File */}
+        <Card className="mb-4 lg:mb-6">
+          <CardHeader className="p-3 lg:p-6">
+            <CardTitle className="text-base lg:text-xl">Step 2: Upload File</CardTitle>
+            <CardDescription className="text-xs lg:text-sm">Select CSV or XLSX file to import</CardDescription>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+            <div className="space-y-3 lg:space-y-4">
+              <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-8 transition-colors hover:border-primary/50 lg:p-12">
+                <label htmlFor="file-upload" className="cursor-pointer text-center">
+                  <FileSpreadsheet className="mx-auto mb-3 h-8 w-8 text-muted-foreground lg:mb-4 lg:h-12 lg:w-12" />
+                  <div className="mb-1.5 text-xs font-medium text-foreground lg:mb-2 lg:text-sm">
+                    {file ? file.name : "Click to upload or drag and drop"}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground lg:text-xs">CSV or XLSX (Max 5MB)</div>
+                  <input id="file-upload" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} className="hidden" />
+                </label>
+              </div>
+
+              {file && (
+                <>
+                  {importing && (
+                    <div className="space-y-1.5 lg:space-y-2">
+                      <div className="flex items-center justify-between text-xs lg:text-sm">
+                        <span className="text-muted-foreground">Importing...</span>
+                        <span className="font-medium">{progress}%</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-muted lg:h-2">
+                        <div
+                          className="h-full bg-primary transition-all duration-300 ease-out"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <Button onClick={handleImport} disabled={importing} className="w-full gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
+                    <Upload className="h-3 w-3 lg:h-4 lg:w-4" />
+                    {importing ? "Importing..." : "Import"}
+                  </Button>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Import Results */}
+        {importResult && (
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Import Results</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0 space-y-3 lg:space-y-4">
+              <div className="flex items-center gap-2 lg:gap-3 rounded-lg bg-green-500/10 p-3 lg:p-4 text-green-500">
+                <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5" />
+                <div>
+                  <div className="font-medium text-sm lg:text-base">{importResult.success} registrations imported successfully</div>
+                  <div className="text-xs lg:text-sm">QR codes generated automatically</div>
+                </div>
+              </div>
+
+              {importResult.skipped > 0 && (
+                <div className="flex items-center gap-2 lg:gap-3 rounded-lg bg-yellow-500/10 p-3 lg:p-4 text-yellow-600">
+                  <AlertCircle className="h-4 w-4 lg:h-5 lg:w-5" />
+                  <div>
+                    <div className="font-medium text-sm lg:text-base">{importResult.skipped} duplicates skipped</div>
+                    <div className="text-xs lg:text-sm">These entries already exist in the database</div>
+                  </div>
+                </div>
+              )}
+
+              {importResult.failed > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 lg:gap-3 rounded-lg bg-destructive/10 p-3 lg:p-4 text-destructive">
+                    <AlertCircle className="h-4 w-4 lg:h-5 lg:w-5" />
+                    <div>
+                      <div className="font-medium text-sm lg:text-base">{importResult.failed} rows failed</div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3 lg:p-4">
+                    <p className="mb-2 text-xs lg:text-sm font-medium">Errors:</p>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {importResult.errors.map((err: any, idx) => (
+                        <li key={idx}>
+                          • {typeof err === 'string' 
+                            ? err 
+                            : `Row ${err.rowNumber}: ${err.error}`}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={() => router.push("/food")} size="sm" className="w-full text-xs lg:text-sm">
+                View All Registrations
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </ResponsiveLayout>
   )
 }

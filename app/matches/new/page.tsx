@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -40,32 +40,29 @@ export default function NewMatchPage() {
   const teams = ["Thunder Strikers", "Lightning Warriors", "Phoenix Blazers", "Storm Chasers"]
 
   return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
+    <ResponsiveLayout>
+      <div className="container mx-auto max-w-3xl p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-4 lg:mb-6">
+          <Link href="/matches">
+            <Button variant="ghost" size="sm" className="mb-2 lg:mb-4 gap-1 lg:gap-2 text-xs lg:text-sm">
+              <ArrowLeft className="h-3 w-3 lg:h-4 lg:w-4" />
+              Back to Matches
+            </Button>
+          </Link>
+          <h1 className="mb-1 lg:mb-2 text-xl lg:text-3xl font-bold text-foreground">Create New Match</h1>
+          <p className="text-xs lg:text-base text-muted-foreground">Schedule a new cricket match</p>
+        </div>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto max-w-3xl p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <Link href="/matches">
-              <Button variant="ghost" className="mb-4 gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Matches
-              </Button>
-            </Link>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Create New Match</h1>
-            <p className="text-muted-foreground">Schedule a new cricket match</p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Match Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Match Details</CardTitle>
-                <CardDescription>Select teams and match type</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
+          {/* Match Details */}
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Match Details</CardTitle>
+              <CardDescription className="text-xs lg:text-sm">Select teams and match type</CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0 space-y-3 lg:space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="matchType">
                     Match Type <span className="text-destructive">*</span>
@@ -134,13 +131,13 @@ export default function NewMatchPage() {
               </CardContent>
             </Card>
 
-            {/* Schedule */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Schedule</CardTitle>
-                <CardDescription>Set match date and time</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          {/* Schedule */}
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Schedule</CardTitle>
+              <CardDescription className="text-xs lg:text-sm">Set match date and time</CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0 space-y-3 lg:space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="scheduledDate">
@@ -171,13 +168,13 @@ export default function NewMatchPage() {
               </CardContent>
             </Card>
 
-            {/* Officials */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Match Officials</CardTitle>
-                <CardDescription>Assign umpires and scorer</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          {/* Officials */}
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Match Officials</CardTitle>
+              <CardDescription className="text-xs lg:text-sm">Assign umpires and scorer</CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0 space-y-3 lg:space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="umpire1">Umpire 1</Label>
@@ -212,21 +209,20 @@ export default function NewMatchPage() {
               </CardContent>
             </Card>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-4">
-              <Link href="/matches">
-                <Button type="button" variant="outline">
-                  Cancel
-                </Button>
-              </Link>
-              <Button type="submit" className="gap-2">
-                <Save className="h-4 w-4" />
-                Create Match
+          {/* Actions */}
+          <div className="flex justify-end gap-2 lg:gap-4">
+            <Link href="/matches">
+              <Button type="button" variant="outline" size="sm" className="text-xs lg:text-sm">
+                Cancel
               </Button>
-            </div>
-          </form>
-        </div>
-      </main>
-    </div>
+            </Link>
+            <Button type="submit" size="sm" className="gap-1 lg:gap-2 text-xs lg:text-sm">
+              <Save className="h-3 w-3 lg:h-4 lg:w-4" />
+              Create Match
+            </Button>
+          </div>
+        </form>
+      </div>
+    </ResponsiveLayout>
   )
 }

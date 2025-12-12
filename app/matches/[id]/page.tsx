@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -57,173 +57,168 @@ export default function MatchDetailPage() {
   const [playerStats] = useState(mockPlayerStats)
 
   return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
+    <ResponsiveLayout>
+      <div className="container mx-auto p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-4 lg:mb-6">
+          <Link href="/matches">
+            <Button variant="ghost" className="mb-3 gap-1.5 text-xs lg:mb-4 lg:gap-2 lg:text-sm" size="sm">
+              <ArrowLeft className="h-3 w-3 lg:h-4 lg:w-4" />
+              Back to Matches
+            </Button>
+          </Link>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <Link href="/matches">
-              <Button variant="ghost" className="mb-4 gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Matches
-              </Button>
-            </Link>
-
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="mb-2 flex items-center gap-3">
-                  <h1 className="text-3xl font-bold text-foreground">Match {match.matchNumber}</h1>
-                  <Badge>{match.matchType}</Badge>
-                  <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">{match.status}</Badge>
-                </div>
-                <p className="text-muted-foreground">
-                  {new Date(match.scheduledTime).toLocaleString("en-US", {
-                    weekday: "long",
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="mb-1.5 flex flex-wrap items-center gap-2 lg:mb-2 lg:gap-3">
+                <h1 className="text-xl font-bold text-foreground lg:text-3xl">Match {match.matchNumber}</h1>
+                <Badge className="text-[10px] lg:text-xs">{match.matchType}</Badge>
+                <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 text-[10px] lg:text-xs">{match.status}</Badge>
               </div>
+              <p className="text-xs text-muted-foreground lg:text-base">
+                {new Date(match.scheduledTime).toLocaleString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
             </div>
           </div>
+        </div>
 
-          {/* Scoreboard */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Scoreboard
-              </CardTitle>
+        {/* Scoreboard */}
+        <Card className="mb-4 lg:mb-6">
+          <CardHeader className="p-3 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
+              <Trophy className="h-4 w-4 lg:h-5 lg:w-5" />
+              Scoreboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 p-3 pt-0 lg:space-y-4 lg:p-6 lg:pt-0">
+            {/* Home Team */}
+            <div className="rounded-lg border border-border p-2.5 lg:p-4">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <span className="text-sm font-bold lg:text-lg">{match.homeTeam}</span>
+                  {match.winner === match.homeTeam && (
+                    <Badge className="ml-1.5 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 text-[10px] lg:ml-2 lg:text-xs">Winner</Badge>
+                  )}
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold lg:text-3xl">{match.homeScore}</div>
+                  <div className="text-[10px] text-muted-foreground lg:text-sm">{match.homeOvers} overs</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Away Team */}
+            <div className="rounded-lg border border-border p-2.5 lg:p-4">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <span className="text-sm font-bold lg:text-lg">{match.awayTeam}</span>
+                  {match.winner === match.awayTeam && (
+                    <Badge className="ml-1.5 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 text-[10px] lg:ml-2 lg:text-xs">Winner</Badge>
+                  )}
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold lg:text-3xl">{match.awayScore}</div>
+                  <div className="text-[10px] text-muted-foreground lg:text-sm">{match.awayOvers} overs</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Result */}
+            {match.winner && (
+              <div className="rounded-lg bg-primary/10 p-2.5 text-center lg:p-4">
+                <p className="text-sm font-semibold text-primary lg:text-lg">{match.winner} won the match</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+          {/* Match Info */}
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Match Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Home Team */}
-              <div className="rounded-lg border border-border p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <div>
-                    <span className="text-lg font-bold">{match.homeTeam}</span>
-                    {match.winner === match.homeTeam && (
-                      <Badge className="ml-2 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20">Winner</Badge>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">{match.homeScore}</div>
-                    <div className="text-sm text-muted-foreground">{match.homeOvers} overs</div>
-                  </div>
-                </div>
+            <CardContent className="space-y-2 p-3 pt-0 lg:space-y-3 lg:p-6 lg:pt-0">
+              <div className="flex justify-between text-xs lg:text-sm">
+                <span className="text-muted-foreground">Toss Winner</span>
+                <span className="font-medium">{match.tossWinner}</span>
               </div>
-
-              {/* Away Team */}
-              <div className="rounded-lg border border-border p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <div>
-                    <span className="text-lg font-bold">{match.awayTeam}</span>
-                    {match.winner === match.awayTeam && (
-                      <Badge className="ml-2 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20">Winner</Badge>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">{match.awayScore}</div>
-                    <div className="text-sm text-muted-foreground">{match.awayOvers} overs</div>
-                  </div>
-                </div>
+              <div className="flex justify-between text-xs lg:text-sm">
+                <span className="text-muted-foreground">Toss Decision</span>
+                <span className="font-medium">{match.tossDecision}</span>
               </div>
-
-              {/* Result */}
-              {match.winner && (
-                <div className="rounded-lg bg-primary/10 p-4 text-center">
-                  <p className="text-lg font-semibold text-primary">{match.winner} won the match</p>
+              <div className="flex justify-between text-xs lg:text-sm">
+                <span className="text-muted-foreground">Umpire 1</span>
+                <span className="font-medium">{match.umpire1}</span>
+              </div>
+              <div className="flex justify-between text-xs lg:text-sm">
+                <span className="text-muted-foreground">Umpire 2</span>
+                <span className="font-medium">{match.umpire2}</span>
+              </div>
+              <div className="flex justify-between text-xs lg:text-sm">
+                <span className="text-muted-foreground">Scorer</span>
+                <span className="font-medium">{match.scorer}</span>
+              </div>
+              {match.manOfTheMatch && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg bg-yellow-500/10 p-2 lg:mt-4 lg:p-3">
+                  <Trophy className="h-4 w-4 text-yellow-500 lg:h-5 lg:w-5" />
+                  <div>
+                    <p className="text-[10px] text-muted-foreground lg:text-xs">Man of the Match</p>
+                    <p className="text-xs font-semibold text-yellow-500 lg:text-base">{match.manOfTheMatch}</p>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Match Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Match Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Toss Winner</span>
-                  <span className="font-medium">{match.tossWinner}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Toss Decision</span>
-                  <span className="font-medium">{match.tossDecision}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Umpire 1</span>
-                  <span className="font-medium">{match.umpire1}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Umpire 2</span>
-                  <span className="font-medium">{match.umpire2}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Scorer</span>
-                  <span className="font-medium">{match.scorer}</span>
-                </div>
-                {match.manOfTheMatch && (
-                  <div className="mt-4 flex items-center gap-2 rounded-lg bg-yellow-500/10 p-3">
-                    <Trophy className="h-5 w-5 text-yellow-500" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Man of the Match</p>
-                      <p className="font-semibold text-yellow-500">{match.manOfTheMatch}</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Player Statistics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Top Performers
-                </CardTitle>
-                <CardDescription>Key player statistics</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Player</TableHead>
-                      <TableHead>Runs</TableHead>
-                      <TableHead>Wickets</TableHead>
+          {/* Player Statistics */}
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
+                <User className="h-4 w-4 lg:h-5 lg:w-5" />
+                Top Performers
+              </CardTitle>
+              <CardDescription className="text-xs lg:text-sm">Key player statistics</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs lg:text-sm">Player</TableHead>
+                    <TableHead className="text-xs lg:text-sm">Runs</TableHead>
+                    <TableHead className="text-xs lg:text-sm">Wkts</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {playerStats.map((stat, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="py-2 lg:py-4">
+                        <div>
+                          <div className="text-xs font-medium lg:text-sm">{stat.player}</div>
+                          <div className="text-[10px] text-muted-foreground lg:text-xs">{stat.team}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-2 lg:py-4">
+                        <div className="text-xs font-semibold lg:text-sm">{stat.runs}</div>
+                        <div className="text-[10px] text-muted-foreground lg:text-xs">({stat.balls})</div>
+                      </TableCell>
+                      <TableCell className="py-2 text-xs font-semibold lg:py-4 lg:text-sm">
+                        {stat.wickets}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {playerStats.map((stat, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{stat.player}</div>
-                            <div className="text-xs text-muted-foreground">{stat.team}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-semibold">{stat.runs}</div>
-                          <div className="text-xs text-muted-foreground">({stat.balls} balls)</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-semibold">{stat.wickets}</div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </ResponsiveLayout>
   )
 }

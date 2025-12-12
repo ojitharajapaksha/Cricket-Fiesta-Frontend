@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,33 +35,30 @@ export default function NewFoodRegistrationPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
+    <ResponsiveLayout>
+      <div className="container mx-auto max-w-3xl p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-4 lg:mb-6">
+          <Link href="/food">
+            <Button variant="ghost" size="sm" className="mb-2 lg:mb-4 gap-1 lg:gap-2 text-xs lg:text-sm">
+              <ArrowLeft className="h-3 w-3 lg:h-4 lg:w-4" />
+              Back to Food Distribution
+            </Button>
+          </Link>
+          <h1 className="mb-1 lg:mb-2 text-xl lg:text-3xl font-bold text-foreground">New Food Registration</h1>
+          <p className="text-xs lg:text-base text-muted-foreground">Register a participant for meal distribution</p>
+        </div>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto max-w-3xl p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <Link href="/food">
-              <Button variant="ghost" className="mb-4 gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Food Distribution
-              </Button>
-            </Link>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">New Food Registration</h1>
-            <p className="text-muted-foreground">Register a participant for meal distribution</p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Registration Information</CardTitle>
-                <CardDescription>
-                  Fill in all required details. QR code will be generated automatically.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Registration Information</CardTitle>
+              <CardDescription className="text-xs lg:text-sm">
+                Fill in all required details. QR code will be generated automatically.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0 space-y-4 lg:space-y-6">
                 {/* Full Name */}
                 <div className="space-y-2">
                   <Label htmlFor="fullName">
@@ -151,21 +148,20 @@ export default function NewFoodRegistrationPage() {
               </CardContent>
             </Card>
 
-            {/* Actions */}
-            <div className="mt-6 flex justify-end gap-4">
-              <Link href="/food">
-                <Button type="button" variant="outline">
-                  Cancel
-                </Button>
-              </Link>
-              <Button type="submit" className="gap-2">
-                <Save className="h-4 w-4" />
-                Save Registration
+          {/* Actions */}
+          <div className="mt-4 lg:mt-6 flex justify-end gap-2 lg:gap-4">
+            <Link href="/food">
+              <Button type="button" variant="outline" size="sm" className="text-xs lg:text-sm">
+                Cancel
               </Button>
-            </div>
-          </form>
-        </div>
-      </main>
-    </div>
+            </Link>
+            <Button type="submit" size="sm" className="gap-1 lg:gap-2 text-xs lg:text-sm">
+              <Save className="h-3 w-3 lg:h-4 lg:w-4" />
+              Save Registration
+            </Button>
+          </div>
+        </form>
+      </div>
+    </ResponsiveLayout>
   )
 }

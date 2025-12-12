@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -96,220 +96,218 @@ export default function NewTeamPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
+    <ResponsiveLayout>
+      <div className="container mx-auto max-w-3xl p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-4 lg:mb-6">
+          <Link href="/teams">
+            <Button variant="ghost" className="mb-3 gap-1.5 text-xs lg:mb-4 lg:gap-2 lg:text-sm" size="sm">
+              <ArrowLeft className="h-3 w-3 lg:h-4 lg:w-4" />
+              Back to Teams
+            </Button>
+          </Link>
+          <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">Create New Team</h1>
+          <p className="text-xs text-muted-foreground lg:text-base">Create a new cricket team for the tournament</p>
+        </div>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto max-w-3xl p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <Link href="/teams">
-              <Button variant="ghost" className="mb-4 gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Teams
-              </Button>
-            </Link>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Create New Team</h1>
-            <p className="text-muted-foreground">Create a new cricket team for the tournament</p>
-          </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Team Information</CardTitle>
+              <CardDescription className="text-xs lg:text-sm">Enter team name and select a color</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-3 pt-0 lg:space-y-6 lg:p-6 lg:pt-0">
+              {/* Team Name */}
+              <div className="space-y-1.5 lg:space-y-2">
+                <Label htmlFor="name" className="text-xs lg:text-sm">
+                  Team Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  placeholder="e.g., Thunder Strikers"
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  required
+                  className="h-8 text-xs lg:h-10 lg:text-sm"
+                />
+              </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Information</CardTitle>
-                <CardDescription>Enter team name and select a color</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Team Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="name">
-                    Team Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., Thunder Strikers"
-                    value={formData.name}
-                    onChange={(e) => handleChange("name", e.target.value)}
-                    required
-                  />
+              {/* Color Selection */}
+              <div className="space-y-3 lg:space-y-4">
+                <Label className="text-xs lg:text-sm">
+                  Team Color <span className="text-destructive">*</span>
+                </Label>
+                
+                {/* Method Selection */}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={colorMethod === "auto" ? "default" : "outline"}
+                    onClick={() => setColorMethod("auto")}
+                    className="flex-1 text-xs lg:text-sm"
+                    size="sm"
+                  >
+                    {colorMethod === "auto" && <Check className="mr-1.5 h-3 w-3 lg:mr-2 lg:h-4 lg:w-4" />}
+                    Auto
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={colorMethod === "manual" ? "default" : "outline"}
+                    onClick={() => setColorMethod("manual")}
+                    className="flex-1 text-xs lg:text-sm"
+                    size="sm"
+                  >
+                    {colorMethod === "manual" && <Check className="mr-1.5 h-3 w-3 lg:mr-2 lg:h-4 lg:w-4" />}
+                    Manual
+                  </Button>
                 </div>
 
-                {/* Color Selection */}
-                <div className="space-y-4">
-                  <Label>
-                    Team Color <span className="text-destructive">*</span>
-                  </Label>
-                  
-                  {/* Method Selection */}
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={colorMethod === "auto" ? "default" : "outline"}
-                      onClick={() => setColorMethod("auto")}
-                      className="flex-1"
-                    >
-                      {colorMethod === "auto" && <Check className="mr-2 h-4 w-4" />}
-                      Auto-Assign
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={colorMethod === "manual" ? "default" : "outline"}
-                      onClick={() => setColorMethod("manual")}
-                      className="flex-1"
-                    >
-                      {colorMethod === "manual" && <Check className="mr-2 h-4 w-4" />}
-                      Manual Selection
-                    </Button>
-                  </div>
-
-                  {/* Auto-Assign Mode */}
-                  {colorMethod === "auto" && (
-                    <div className="space-y-3">
-                      <div className="rounded-lg border border-border bg-muted/50 p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="h-12 w-12 rounded-lg border-2 border-white shadow-lg"
-                              style={{ backgroundColor: formData.color }}
-                            />
-                            <div>
-                              <p className="font-medium">Assigned Color</p>
-                              <p className="text-sm text-muted-foreground">
-                                {professionalColors.find(c => c.value === formData.color)?.name || "Professional Team Color"}
-                              </p>
-                            </div>
+                {/* Auto-Assign Mode */}
+                {colorMethod === "auto" && (
+                  <div className="space-y-2.5 lg:space-y-3">
+                    <div className="rounded-lg border border-border bg-muted/50 p-2.5 lg:p-4">
+                      <div className="mb-2.5 flex items-center justify-between lg:mb-3">
+                        <div className="flex items-center gap-2 lg:gap-3">
+                          <div
+                            className="h-8 w-8 rounded-lg border-2 border-white shadow-lg lg:h-12 lg:w-12"
+                            style={{ backgroundColor: formData.color }}
+                          />
+                          <div>
+                            <p className="text-xs font-medium lg:text-base">Assigned Color</p>
+                            <p className="text-[10px] text-muted-foreground lg:text-sm">
+                              {professionalColors.find(c => c.value === formData.color)?.name || "Professional Team Color"}
+                            </p>
                           </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={autoAssignColor}
-                            className="gap-2"
-                          >
-                            <Shuffle className="h-4 w-4" />
-                            Randomize
-                          </Button>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Colors are automatically selected from professional cricket team palettes. Click randomize to try a different color.
-                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={autoAssignColor}
+                          className="gap-1.5 text-xs lg:gap-2 lg:text-sm"
+                        >
+                          <Shuffle className="h-3 w-3 lg:h-4 lg:w-4" />
+                          <span className="hidden sm:inline">Randomize</span>
+                        </Button>
                       </div>
-
-                      {/* Professional Color Palette Preview */}
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Select from Professional Palette</p>
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                          {professionalColors.map((color) => (
-                            <button
-                              key={color.value}
-                              type="button"
-                              onClick={() => handleChange("color", color.value)}
-                              className="group relative overflow-hidden rounded-lg border-2 p-3 text-left transition-all hover:scale-105 hover:shadow-md"
-                              style={{
-                                borderColor: formData.color === color.value ? color.value : "transparent",
-                                backgroundColor: formData.color === color.value ? `${color.value}10` : "transparent",
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="h-8 w-8 rounded border-2 border-white shadow-sm"
-                                  style={{ backgroundColor: color.value }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium truncate">{color.name}</p>
-                                  <p className="text-[10px] text-muted-foreground truncate">{color.description}</p>
-                                </div>
-                              </div>
-                              {formData.color === color.value && (
-                                <div className="absolute top-1 right-1">
-                                  <div className="rounded-full bg-green-500 p-0.5">
-                                    <Check className="h-3 w-3 text-white" />
-                                  </div>
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">
+                        Colors are automatically selected from professional cricket team palettes.
+                      </p>
                     </div>
-                  )}
 
-                  {/* Manual Selection Mode */}
-                  {colorMethod === "manual" && (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
-                        {colorPresets.map((color) => (
+                    {/* Professional Color Palette Preview */}
+                    <div className="space-y-1.5 lg:space-y-2">
+                      <p className="text-xs font-medium lg:text-sm">Select from Professional Palette</p>
+                      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5 lg:gap-2">
+                        {professionalColors.map((color) => (
                           <button
                             key={color.value}
                             type="button"
                             onClick={() => handleChange("color", color.value)}
-                            className="group relative aspect-square overflow-hidden rounded-lg border-2 transition-all hover:scale-105"
+                            className="group relative overflow-hidden rounded-lg border-2 p-2 text-left transition-all hover:scale-105 hover:shadow-md lg:p-3"
                             style={{
-                              backgroundColor: color.value,
                               borderColor: formData.color === color.value ? color.value : "transparent",
+                              backgroundColor: formData.color === color.value ? `${color.value}10` : "transparent",
                             }}
                           >
+                            <div className="flex items-center gap-1.5 lg:gap-2">
+                              <div
+                                className="h-6 w-6 rounded border-2 border-white shadow-sm lg:h-8 lg:w-8"
+                                style={{ backgroundColor: color.value }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-medium truncate lg:text-xs">{color.name}</p>
+                              </div>
+                            </div>
                             {formData.color === color.value && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                <div className="h-4 w-4 rounded-full bg-white" />
+                              <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1">
+                                <div className="rounded-full bg-green-500 p-0.5">
+                                  <Check className="h-2 w-2 text-white lg:h-3 lg:w-3" />
+                                </div>
                               </div>
                             )}
-                            <span className="sr-only">{color.name}</span>
                           </button>
                         ))}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">Custom color:</span>
-                        <input
-                          type="color"
-                          value={formData.color}
-                          onChange={(e) => handleChange("color", e.target.value)}
-                          className="h-10 w-20 cursor-pointer rounded border border-border"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Preview */}
-                <div className="space-y-2">
-                  <Label>Preview</Label>
-                  <div className="flex items-center gap-4 rounded-lg border border-border p-4">
-                    <div
-                      className="flex h-16 w-16 items-center justify-center rounded-lg text-white"
-                      style={{ backgroundColor: formData.color }}
-                    >
-                      <span className="text-2xl font-bold">{formData.name ? formData.name[0] : "T"}</span>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold">{formData.name || "Team Name"}</div>
-                      <div className="text-sm text-muted-foreground">Cricket Team</div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <div className="mt-6 flex justify-end gap-4">
-              <Link href="/teams">
-                <Button type="button" variant="outline" disabled={submitting}>
-                  Cancel
-                </Button>
-              </Link>
-              <Button type="submit" className="gap-2" disabled={submitting}>
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
                 )}
-                {submitting ? "Creating..." : "Create Team"}
+
+                {/* Manual Selection Mode */}
+                {colorMethod === "manual" && (
+                  <div className="space-y-2.5 lg:space-y-3">
+                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 lg:gap-3">
+                      {colorPresets.map((color) => (
+                        <button
+                          key={color.value}
+                          type="button"
+                          onClick={() => handleChange("color", color.value)}
+                          className="group relative aspect-square overflow-hidden rounded-lg border-2 transition-all hover:scale-105"
+                          style={{
+                            backgroundColor: color.value,
+                            borderColor: formData.color === color.value ? color.value : "transparent",
+                          }}
+                        >
+                          {formData.color === color.value && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                              <div className="h-3 w-3 rounded-full bg-white lg:h-4 lg:w-4" />
+                            </div>
+                          )}
+                          <span className="sr-only">{color.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground lg:text-sm">Custom:</span>
+                      <input
+                        type="color"
+                        value={formData.color}
+                        onChange={(e) => handleChange("color", e.target.value)}
+                        className="h-8 w-16 cursor-pointer rounded border border-border lg:h-10 lg:w-20"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Preview */}
+              <div className="space-y-1.5 lg:space-y-2">
+                <Label className="text-xs lg:text-sm">Preview</Label>
+                <div className="flex items-center gap-3 rounded-lg border border-border p-3 lg:gap-4 lg:p-4">
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-lg text-white lg:h-16 lg:w-16"
+                    style={{ backgroundColor: formData.color }}
+                  >
+                    <span className="text-lg font-bold lg:text-2xl">{formData.name ? formData.name[0] : "T"}</span>
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold lg:text-lg">{formData.name || "Team Name"}</div>
+                    <div className="text-xs text-muted-foreground lg:text-sm">Cricket Team</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="mt-4 flex justify-end gap-2 lg:mt-6 lg:gap-4">
+            <Link href="/teams">
+              <Button type="button" variant="outline" disabled={submitting} size="sm" className="text-xs lg:text-sm">
+                Cancel
               </Button>
-            </div>
-          </form>
-        </div>
-      </main>
-    </div>
+            </Link>
+            <Button type="submit" className="gap-1.5 text-xs lg:gap-2 lg:text-sm" disabled={submitting} size="sm">
+              {submitting ? (
+                <Loader2 className="h-3 w-3 animate-spin lg:h-4 lg:w-4" />
+              ) : (
+                <Save className="h-3 w-3 lg:h-4 lg:w-4" />
+              )}
+              {submitting ? "Creating..." : "Create Team"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </ResponsiveLayout>
   )
 }

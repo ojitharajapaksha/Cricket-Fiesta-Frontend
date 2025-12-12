@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react"
@@ -144,60 +144,56 @@ export default function CommitteeBulkImportPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
+    <ResponsiveLayout>
+      <div className="container mx-auto max-w-3xl p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-4 lg:mb-6">
+          <Link href="/committee">
+            <Button variant="ghost" className="mb-3 gap-1.5 text-xs lg:mb-4 lg:gap-2 lg:text-sm" size="sm">
+              <ArrowLeft className="h-3 w-3 lg:h-4 lg:w-4" />
+              Back to Committee
+            </Button>
+          </Link>
+          <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">Bulk Import Committee</h1>
+          <p className="text-xs text-muted-foreground lg:text-base">Upload CSV or Excel file to register multiple volunteers</p>
+        </div>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto max-w-3xl p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <Link href="/committee">
-              <Button variant="ghost" className="mb-4 gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Committee
-              </Button>
-            </Link>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Bulk Import Committee Members</h1>
-            <p className="text-muted-foreground">Upload a CSV or Excel (XLSX) file to register multiple volunteers at once</p>
-          </div>
+        {/* Download Template */}
+        <Card className="mb-4 lg:mb-6">
+          <CardHeader className="p-3 lg:p-6">
+            <CardTitle className="text-base lg:text-xl">Step 1: Download Template</CardTitle>
+            <CardDescription className="text-xs lg:text-sm">Download CSV template and fill in volunteer info</CardDescription>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+            <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
+              <Download className="h-3 w-3 lg:h-4 lg:w-4" />
+              Download Template
+            </Button>
+            <div className="mt-3 rounded-lg bg-muted p-2.5 lg:mt-4 lg:p-4">
+              <p className="mb-1.5 text-xs font-medium lg:mb-2 lg:text-sm">Template columns:</p>
+              <code className="text-[10px] text-muted-foreground lg:text-xs">
+                Full Name, Department, WhatsApp, Email, Team, Experience, Emergency Contact, Availability
+              </code>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Download Template */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Step 1: Download Template</CardTitle>
-              <CardDescription>Download the CSV template and fill in volunteer information</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="gap-2 bg-transparent">
-                <Download className="h-4 w-4" />
-                Download CSV Template
-              </Button>
-              <div className="mt-4 rounded-lg bg-muted p-4">
-                <p className="mb-2 text-sm font-medium">Template columns:</p>
-                <code className="text-xs text-muted-foreground">
-                  Full Name, Department, WhatsApp, Email, Team, Experience, Emergency Contact, Availability (Planning,
-                  Setup, Morning, Afternoon)
-                </code>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Upload File */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Step 2: Upload CSV or Excel File</CardTitle>
-              <CardDescription>Select the filled CSV or XLSX file to import committee members</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-12 transition-colors hover:border-primary/50">
-                  <label htmlFor="file-upload" className="cursor-pointer text-center">
-                    <FileSpreadsheet className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                    <div className="mb-2 text-sm font-medium text-foreground">
-                      {file ? file.name : "Click to upload or drag and drop"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">CSV or XLSX file (Max 5MB)</div>
-                    <input id="file-upload" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} className="hidden" />
+        {/* Upload File */}
+        <Card className="mb-4 lg:mb-6">
+          <CardHeader className="p-3 lg:p-6">
+            <CardTitle className="text-base lg:text-xl">Step 2: Upload File</CardTitle>
+            <CardDescription className="text-xs lg:text-sm">Select CSV or XLSX file to import</CardDescription>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+            <div className="space-y-3 lg:space-y-4">
+              <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-8 transition-colors hover:border-primary/50 lg:p-12">
+                <label htmlFor="file-upload" className="cursor-pointer text-center">
+                  <FileSpreadsheet className="mx-auto mb-3 h-8 w-8 text-muted-foreground lg:mb-4 lg:h-12 lg:w-12" />
+                  <div className="mb-1.5 text-xs font-medium text-foreground lg:mb-2 lg:text-sm">
+                    {file ? file.name : "Click to upload or drag and drop"}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground lg:text-xs">CSV or XLSX (Max 5MB)</div>
+                  <input id="file-upload" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} className="hidden" />
                   </label>
                 </div>
 
@@ -227,47 +223,46 @@ export default function CommitteeBulkImportPage() {
             </CardContent>
           </Card>
 
-          {/* Import Results */}
-          {importResult && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Import Results</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 rounded-lg bg-green-500/10 p-4 text-green-500">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <div>
-                    <div className="font-medium">{importResult.success} members imported successfully</div>
+        {/* Import Results */}
+        {importResult && (
+          <Card>
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Import Results</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0 space-y-3 lg:space-y-4">
+              <div className="flex items-center gap-2 lg:gap-3 rounded-lg bg-green-500/10 p-3 lg:p-4 text-green-500">
+                <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5" />
+                <div>
+                  <div className="font-medium text-sm lg:text-base">{importResult.success} members imported successfully</div>
+                </div>
+              </div>
+
+              {importResult.failed > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 lg:gap-3 rounded-lg bg-destructive/10 p-3 lg:p-4 text-destructive">
+                    <AlertCircle className="h-4 w-4 lg:h-5 lg:w-5" />
+                    <div>
+                      <div className="font-medium text-sm lg:text-base">{importResult.failed} rows failed</div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3 lg:p-4">
+                    <p className="mb-2 text-xs lg:text-sm font-medium">Errors:</p>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {importResult.errors.map((error, idx) => (
+                        <li key={idx}>• {error}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
+              )}
 
-                {importResult.failed > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 rounded-lg bg-destructive/10 p-4 text-destructive">
-                      <AlertCircle className="h-5 w-5" />
-                      <div>
-                        <div className="font-medium">{importResult.failed} rows failed</div>
-                      </div>
-                    </div>
-                    <div className="rounded-lg bg-muted p-4">
-                      <p className="mb-2 text-sm font-medium">Errors:</p>
-                      <ul className="space-y-1 text-xs text-muted-foreground">
-                        {importResult.errors.map((error, idx) => (
-                          <li key={idx}>• {error}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                <Button onClick={() => router.push("/committee")} className="w-full">
-                  View All Members
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </main>
-    </div>
+              <Button onClick={() => router.push("/committee")} size="sm" className="w-full text-xs lg:text-sm">
+                View All Members
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </ResponsiveLayout>
   )
 }

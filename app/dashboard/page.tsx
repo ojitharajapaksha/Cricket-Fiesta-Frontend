@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -110,35 +110,32 @@ export default function DashboardPage() {
     );
   }
   return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
-
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h1 className="mb-2 text-3xl font-bold text-foreground">Dashboard</h1>
-                <p className="text-muted-foreground">Welcome to the SLT Trainees Cricket Fiesta event management</p>
-              </div>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2">
-                <Activity className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-medium">Event Active</span>
-              </div>
+    <ResponsiveLayout>
+      <div className="container mx-auto p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-4 lg:mb-6">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="mb-1 text-2xl font-bold text-foreground lg:mb-2 lg:text-3xl">Dashboard</h1>
+              <p className="text-sm text-muted-foreground lg:text-base">Welcome to the SLT Trainees Cricket Fiesta event management</p>
+            </div>
+            <div className="flex items-center gap-2 self-start rounded-lg border border-border bg-card px-3 py-1.5 sm:px-4 sm:py-2">
+              <Activity className="h-4 w-4 text-green-500" />
+              <span className="text-xs font-medium sm:text-sm">Event Active</span>
             </div>
           </div>
+        </div>
 
-          {/* Key Metrics */}
-          <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Key Metrics */}
+        <div className="mb-4 grid grid-cols-2 gap-3 lg:mb-6 lg:grid-cols-4 lg:gap-4">
             <Card className="transition-all hover:border-primary">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Players</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1 lg:p-6 lg:pb-2">
+                <CardTitle className="text-xs font-medium lg:text-sm">Total Players</CardTitle>
+                <Users className="h-3 w-3 text-muted-foreground lg:h-4 lg:w-4" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.players.total || 0}</div>
-                <p className="text-xs text-muted-foreground">
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+                <div className="text-xl font-bold lg:text-2xl">{stats?.players.total || 0}</div>
+                <p className="text-[10px] text-muted-foreground lg:text-xs">
                   <span className={stats?.players.attendanceRate && stats.players.attendanceRate > 0 ? "text-green-500" : "text-gray-500"}>
                     {stats?.players.attended || 0} attended
                   </span>{" "}
@@ -148,15 +145,15 @@ export default function DashboardPage() {
             </Card>
 
             <Card className="transition-all hover:border-primary">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Food Registrations</CardTitle>
-                <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1 lg:p-6 lg:pb-2">
+                <CardTitle className="text-xs font-medium lg:text-sm">Food Registrations</CardTitle>
+                <UtensilsCrossed className="h-3 w-3 text-muted-foreground lg:h-4 lg:w-4" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+                <div className="text-xl font-bold lg:text-2xl">
                   {stats?.food.collected || 0} / {stats?.food.total || 0}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground lg:text-xs">
                   <span className={stats?.food.collectionRate && stats.food.collectionRate === 100 ? "text-green-500" : "text-orange-500"}>
                     {stats?.food.collectionRate?.toFixed(1) || 0}%
                   </span>{" "}
@@ -166,43 +163,43 @@ export default function DashboardPage() {
             </Card>
 
             <Card className="transition-all hover:border-primary">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Active Matches</CardTitle>
-                <Trophy className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1 lg:p-6 lg:pb-2">
+                <CardTitle className="text-xs font-medium lg:text-sm">Active Matches</CardTitle>
+                <Trophy className="h-3 w-3 text-muted-foreground lg:h-4 lg:w-4" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.matches.live || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stats?.matches.completed || 0} completed, {stats?.matches.upcoming || 0} upcoming
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+                <div className="text-xl font-bold lg:text-2xl">{stats?.matches.live || 0}</div>
+                <p className="text-[10px] text-muted-foreground lg:text-xs">
+                  {stats?.matches.completed || 0} done, {stats?.matches.upcoming || 0} upcoming
                 </p>
               </CardContent>
             </Card>
 
             <Card className="transition-all hover:border-primary">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Committee Members</CardTitle>
-                <Award className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1 lg:p-6 lg:pb-2">
+                <CardTitle className="text-xs font-medium lg:text-sm">Committee</CardTitle>
+                <Award className="h-3 w-3 text-muted-foreground lg:h-4 lg:w-4" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+                <div className="text-xl font-bold lg:text-2xl">
                   {stats?.committee.active || 0} / {stats?.committee.total || 0}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {stats?.committee.active === stats?.committee.total ? "All" : stats?.committee.active || 0} volunteers checked in
+                <p className="text-[10px] text-muted-foreground lg:text-xs">
+                  {stats?.committee.active === stats?.committee.total ? "All" : stats?.committee.active || 0} checked in
                 </p>
               </CardContent>
             </Card>
           </div>
 
           {/* Charts Row */}
-          <div className="mb-6 grid gap-6 lg:grid-cols-2">
+          <div className="mb-4 grid gap-4 lg:mb-6 lg:grid-cols-2 lg:gap-6">
             {/* Department Distribution */}
             <Card>
-              <CardHeader>
-                <CardTitle>Players by Department</CardTitle>
-                <CardDescription>Distribution of registered players across departments</CardDescription>
+              <CardHeader className="p-3 lg:p-6">
+                <CardTitle className="text-sm lg:text-base">Players by Department</CardTitle>
+                <CardDescription className="text-xs lg:text-sm">Distribution of registered players</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
                 {departmentData.length > 0 ? (
                   <ChartContainer
                     config={{
@@ -211,12 +208,12 @@ export default function DashboardPage() {
                         color: "hsl(var(--primary))",
                       },
                     }}
-                    className="h-[300px]"
+                    className="h-[200px] lg:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={departmentData}>
-                        <XAxis dataKey="department" />
-                        <YAxis />
+                        <XAxis dataKey="department" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]}>
                           {departmentData.map((entry, index) => (
@@ -227,7 +224,7 @@ export default function DashboardPage() {
                     </ResponsiveContainer>
                   </ChartContainer>
                 ) : (
-                  <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                  <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground lg:h-[300px]">
                     No department data available
                   </div>
                 )}
@@ -236,11 +233,11 @@ export default function DashboardPage() {
 
             {/* Food Preference */}
             <Card>
-              <CardHeader>
-                <CardTitle>Food Preferences</CardTitle>
-                <CardDescription>Vegetarian vs Non-Vegetarian distribution</CardDescription>
+              <CardHeader className="p-3 lg:p-6">
+                <CardTitle className="text-sm lg:text-base">Food Preferences</CardTitle>
+                <CardDescription className="text-xs lg:text-sm">Vegetarian vs Non-Vegetarian</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
                 {foodData.length > 0 ? (
                   <ChartContainer
                     config={{
@@ -253,7 +250,7 @@ export default function DashboardPage() {
                         color: "#ef4444",
                       },
                     }}
-                    className="h-[300px]"
+                    className="h-[200px] lg:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -263,7 +260,7 @@ export default function DashboardPage() {
                           cy="50%"
                           labelLine={false}
                           label={({ preference, count }) => `${preference === "VEGETARIAN" ? "Veg" : "Non-Veg"}: ${count}`}
-                          outerRadius={100}
+                          outerRadius={80}
                           fill="#8884d8"
                           dataKey="count"
                         >
@@ -279,7 +276,7 @@ export default function DashboardPage() {
                     </ResponsiveContainer>
                   </ChartContainer>
                 ) : (
-                  <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                  <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground lg:h-[300px]">
                     No food preference data available
                   </div>
                 )}
@@ -290,35 +287,35 @@ export default function DashboardPage() {
           {/* Attendance Timeline - Removed as it requires real-time tracking */}
           
           {/* Bottom Row */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
             {/* Quick Actions */}
             <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common tasks and operations</CardDescription>
+              <CardHeader className="p-3 lg:p-6">
+                <CardTitle className="text-sm lg:text-base">Quick Actions</CardTitle>
+                <CardDescription className="text-xs lg:text-sm">Common tasks and operations</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2 p-3 pt-0 lg:p-6 lg:pt-0">
                 <Link href="/players/new">
-                  <Button className="w-full justify-start gap-2 bg-transparent" variant="outline">
-                    <Users className="h-4 w-4" />
+                  <Button className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" variant="outline" size="sm">
+                    <Users className="h-3 w-3 lg:h-4 lg:w-4" />
                     Register New Player
                   </Button>
                 </Link>
                 <Link href="/food/scanner">
-                  <Button className="w-full justify-start gap-2 bg-transparent" variant="outline">
-                    <UtensilsCrossed className="h-4 w-4" />
+                  <Button className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" variant="outline" size="sm">
+                    <UtensilsCrossed className="h-3 w-3 lg:h-4 lg:w-4" />
                     Open QR Scanner
                   </Button>
                 </Link>
                 <Link href="/matches/new">
-                  <Button className="w-full justify-start gap-2 bg-transparent" variant="outline">
-                    <Trophy className="h-4 w-4" />
+                  <Button className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" variant="outline" size="sm">
+                    <Trophy className="h-3 w-3 lg:h-4 lg:w-4" />
                     Schedule New Match
                   </Button>
                 </Link>
                 <Link href="/committee">
-                  <Button className="w-full justify-start gap-2 bg-transparent" variant="outline">
-                    <Award className="h-4 w-4" />
+                  <Button className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" variant="outline" size="sm">
+                    <Award className="h-3 w-3 lg:h-4 lg:w-4" />
                     Manage Committee
                   </Button>
                 </Link>
@@ -327,52 +324,52 @@ export default function DashboardPage() {
 
             {/* Recent Activity - Removed static data */}
             <Card>
-              <CardHeader>
-                <CardTitle>System Status</CardTitle>
-                <CardDescription>Current system overview</CardDescription>
+              <CardHeader className="p-3 lg:p-6">
+                <CardTitle className="text-sm lg:text-base">System Status</CardTitle>
+                <CardDescription className="text-xs lg:text-sm">Current system overview</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <Users className="h-4 w-4 text-primary" />
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+                <div className="space-y-3 lg:space-y-4">
+                  <div className="flex items-start gap-2 lg:gap-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 lg:h-8 lg:w-8">
+                      <Users className="h-3 w-3 text-primary lg:h-4 lg:w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Player Registration</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs font-medium lg:text-sm">Player Registration</p>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">
                         {stats?.players.total || 0} players registered
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <Trophy className="h-4 w-4 text-primary" />
+                  <div className="flex items-start gap-2 lg:gap-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 lg:h-8 lg:w-8">
+                      <Trophy className="h-3 w-3 text-primary lg:h-4 lg:w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Match Progress</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs font-medium lg:text-sm">Match Progress</p>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">
                         {stats?.matches.completed || 0} completed, {stats?.matches.live || 0} live
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <UtensilsCrossed className="h-4 w-4 text-primary" />
+                  <div className="flex items-start gap-2 lg:gap-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 lg:h-8 lg:w-8">
+                      <UtensilsCrossed className="h-3 w-3 text-primary lg:h-4 lg:w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Food Distribution</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs font-medium lg:text-sm">Food Distribution</p>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">
                         {stats?.food.collected || 0}/{stats?.food.total || 0} meals distributed
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <Award className="h-4 w-4 text-primary" />
+                  <div className="flex items-start gap-2 lg:gap-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 lg:h-8 lg:w-8">
+                      <Award className="h-3 w-3 text-primary lg:h-4 lg:w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Committee Active</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs font-medium lg:text-sm">Committee Active</p>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">
                         {stats?.committee.active || 0}/{stats?.committee.total || 0} volunteers on duty
                       </p>
                     </div>
@@ -383,15 +380,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Event Status Banner */}
-          <Card className="mt-6 border-primary/20 bg-primary/5">
-            <CardContent className="flex items-center justify-between p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <Calendar className="h-6 w-6 text-primary" />
+          <Card className="mt-4 border-primary/20 bg-primary/5 lg:mt-6">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between lg:p-6">
+              <div className="flex items-center gap-3 lg:gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 lg:h-12 lg:w-12">
+                  <Calendar className="h-5 w-5 text-primary lg:h-6 lg:w-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Event Day Progress</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-sm font-semibold text-foreground lg:text-base">Event Day Progress</h3>
+                  <p className="text-xs text-muted-foreground lg:text-sm">
                     {stats?.matches.live && stats.matches.live > 0
                       ? `${stats.matches.live} match${stats.matches.live > 1 ? "es" : ""} currently live`
                       : "All systems operational"}
@@ -401,8 +398,8 @@ export default function DashboardPage() {
               <Badge
                 className={
                   stats?.matches.live && stats.matches.live > 0
-                    ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
-                    : "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
+                    ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 self-start sm:self-auto"
+                    : "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 self-start sm:self-auto"
                 }
               >
                 <CheckCircle2 className="mr-1 h-3 w-3" />
@@ -411,7 +408,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </ResponsiveLayout>
+    
   )
 }
