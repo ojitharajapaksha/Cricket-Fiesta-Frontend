@@ -1,9 +1,5 @@
-# Vercel Deployment Configuration
-
-# Build settings are in package.json
-
-# Environment variables to set in Vercel Dashboard:
-# - NEXT_PUBLIC_API_URL
-# - NEXT_PUBLIC_WS_URL
-
-# This file helps with custom configurations
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next"
+}
