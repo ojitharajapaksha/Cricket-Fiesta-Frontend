@@ -2,6 +2,11 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trophy, Users, UtensilsCrossed, CalendarDays, Award, BarChart3 } from "lucide-react"
+import { CountdownTimer } from "@/components/countdown-timer"
+import { StatsSection } from "@/components/stats-section"
+
+// Event starts on January 10th, 2026 at 9:00 AM Sri Lanka Time (UTC+5:30)
+const EVENT_DATE = new Date("2026-01-10T09:00:00+05:30")
 
 export default function HomePage() {
   return (
@@ -38,7 +43,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs text-primary lg:mb-6 lg:gap-2 lg:px-4 lg:py-2 lg:text-sm">
               <CalendarDays className="h-3 w-3 lg:h-4 lg:w-4" />
-              <span>Event Day: March 15, 2024</span>
+              <span>Event Day: January 10, 2026 • 9:00 AM</span>
             </div>
             <h2 className="mb-4 text-balance text-2xl font-bold tracking-tight text-foreground sm:text-4xl lg:mb-6 lg:text-5xl xl:text-6xl">
               Welcome to the SLT Trainees Cricket Fiesta
@@ -47,14 +52,20 @@ export default function HomePage() {
               Comprehensive event management system for 200+ participants. Handle registrations, food distribution,
               match scheduling, and live scoring all in one place.
             </p>
+            
+            {/* Countdown Timer */}
+            <div className="mb-6 lg:mb-8">
+              <CountdownTimer targetDate={EVENT_DATE} eventName="Cricket Fiesta 2026" />
+            </div>
+            
             <div className="flex flex-wrap items-center justify-center gap-3 lg:gap-4">
-              <Link href="/register">
+              <a href="https://linktr.ee/CricketFiestaRegistrationLinks" target="_blank" rel="noopener noreferrer">
                 <Button size="sm" className="gap-1.5 text-xs lg:gap-2 lg:text-sm">
                   <Users className="h-4 w-4 lg:h-5 lg:w-5" />
                   Register Now
                 </Button>
-              </Link>
-              <Link href="/live-scores">
+              </a>
+              <Link href="/login">
                 <Button size="sm" variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm">
                   <Trophy className="h-4 w-4 lg:h-5 lg:w-5" />
                   Live Scores
@@ -197,29 +208,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="border-y border-border bg-accent py-8 lg:py-16">
-        <div className="container mx-auto px-3 lg:px-4">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 lg:gap-8">
-            <div className="text-center">
-              <div className="mb-1 text-2xl font-bold text-primary lg:mb-2 lg:text-4xl">200+</div>
-              <div className="text-xs text-muted-foreground lg:text-sm">Total Participants</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-1 text-2xl font-bold text-primary lg:mb-2 lg:text-4xl">16</div>
-              <div className="text-xs text-muted-foreground lg:text-sm">Cricket Teams</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-1 text-2xl font-bold text-primary lg:mb-2 lg:text-4xl">24</div>
-              <div className="text-xs text-muted-foreground lg:text-sm">Total Matches</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-1 text-2xl font-bold text-primary lg:mb-2 lg:text-4xl">10</div>
-              <div className="text-xs text-muted-foreground lg:text-sm">Committee Teams</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Stats Section - Real-time data from database */}
+      <StatsSection />
 
       {/* Footer */}
       <footer className="border-t border-border bg-card py-6 lg:py-8">
