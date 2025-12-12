@@ -11,6 +11,12 @@ import { toast } from "sonner"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
+interface UserData {
+  id: string;
+  email: string;
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
+}
+
 interface Team {
   id: string
   name: string
@@ -31,8 +37,14 @@ export default function TeamsPage() {
   const [totalRegisteredPlayers, setTotalRegisteredPlayers] = useState(0)
   const [loading, setLoading] = useState(true)
   const [autoAssigning, setAutoAssigning] = useState(false)
+  const [user, setUser] = useState<UserData | null>(null)
 
   useEffect(() => {
+    // Load user from localStorage
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
     fetchTeams()
     fetchPlayerCount()
   }, [])
@@ -127,33 +139,40 @@ export default function TeamsPage() {
         {/* Header */}
         <div className="mb-4 flex flex-col gap-3 lg:mb-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">Team Management</h1>
-            <p className="text-xs text-muted-foreground lg:text-base">Manage cricket teams and player assignments</p>
+            <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">
+              {user?.role === 'USER' ? 'Teams' : 'Team Management'}
+            </h1>
+            <p className="text-xs text-muted-foreground lg:text-base">
+              {user?.role === 'USER' ? 'View all cricket teams' : 'Manage cricket teams and player assignments'}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              variant="outline" 
-              className="gap-2 bg-transparent text-xs lg:text-sm"
-              size="sm"
-              onClick={handleAutoAssign}
-              disabled={autoAssigning || teams.length === 0}
-            >
-              {autoAssigning ? (
-                <Loader2 className="h-3 w-3 animate-spin lg:h-4 lg:w-4" />
-              ) : (
-                <Shuffle className="h-3 w-3 lg:h-4 lg:w-4" />
-              )}
-              <span className="hidden sm:inline">{autoAssigning ? "Assigning..." : "Auto-Assign Players"}</span>
-              <span className="sm:hidden">{autoAssigning ? "..." : "Auto"}</span>
-            </Button>
-            <Link href="/teams/new">
-              <Button className="gap-2 text-xs lg:text-sm" size="sm">
-                <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Create Team</span>
-                <span className="sm:hidden">Create</span>
+          {/* Only show admin buttons for non-USER roles */}
+          {user?.role !== 'USER' && (
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant="outline" 
+                className="gap-2 bg-transparent text-xs lg:text-sm"
+                size="sm"
+                onClick={handleAutoAssign}
+                disabled={autoAssigning || teams.length === 0}
+              >
+                {autoAssigning ? (
+                  <Loader2 className="h-3 w-3 animate-spin lg:h-4 lg:w-4" />
+                ) : (
+                  <Shuffle className="h-3 w-3 lg:h-4 lg:w-4" />
+                )}
+                <span className="hidden sm:inline">{autoAssigning ? "Assigning..." : "Auto-Assign Players"}</span>
+                <span className="sm:hidden">{autoAssigning ? "..." : "Auto"}</span>
               </Button>
-            </Link>
-          </div>
+              <Link href="/teams/new">
+                <Button className="gap-2 text-xs lg:text-sm" size="sm">
+                  <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Create Team</span>
+                  <span className="sm:hidden">Create</span>
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}

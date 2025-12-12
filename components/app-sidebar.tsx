@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Trophy, Users, UtensilsCrossed, CalendarDays, BarChart3, Award, Settings, LogOut, QrCode, ShieldCheck, User, DollarSign, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 interface UserData {
   id: string;
@@ -44,6 +44,7 @@ const navigationByRole = {
     { name: "QR Scanner", href: "/scanner", icon: QrCode },
   ],
   USER: [
+    { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
     { name: "Matches", href: "/matches", icon: CalendarDays },
     { name: "Food Status", href: "/food/scanner", icon: UtensilsCrossed },
     { name: "Teams", href: "/teams", icon: Trophy },
@@ -282,7 +283,10 @@ export function MobileHeader() {
             <span className="sr-only">Toggle menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
+        <SheetContent side="left" className="w-64 p-0" aria-describedby={undefined}>
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+          </SheetHeader>
           <SidebarContent 
             user={user} 
             navigation={navigation} 

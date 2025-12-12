@@ -5,7 +5,7 @@ import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2 } from "lucide-react"
+import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -18,6 +18,16 @@ import {
 } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import Link from "next/link"
+
+interface UserData {
+  id: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
+  traineeId?: string;
+}
 
 interface DashboardStats {
   players: {
@@ -56,19 +66,95 @@ interface FoodPreference {
   count: number;
 }
 
+interface PlayerInfo {
+  id: string;
+  traineeId: string;
+  fullName: string;
+  email: string;
+  department: string;
+  team?: {
+    id: string;
+    name: string;
+    shortName: string;
+    color: string;
+  };
+  foodRegistration?: {
+    id: string;
+    foodPreference: string;
+    foodCollected: boolean;
+    foodCollectedAt: string | null;
+  };
+}
+
+interface UpcomingMatch {
+  id: string;
+  homeTeam: { name: string; shortName: string };
+  awayTeam: { name: string; shortName: string };
+  scheduledAt: string;
+  status: string;
+}
+
 const departmentColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f97316", "#ec4899", "#14b8a6", "#eab308", "#06b6d4"];
 
 export default function DashboardPage() {
+  const [user, setUser] = useState<UserData | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
   const [foodData, setFoodData] = useState<FoodPreference[]>([]);
+  const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
+  const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
+    // Load user from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      
+      if (userData.role === 'USER') {
+        fetchPlayerDashboard(userData);
+      } else {
+        fetchAdminDashboard();
+      }
+    } else {
+      fetchAdminDashboard();
+    }
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchPlayerDashboard = async (userData: UserData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Fetch player info by email/traineeId
+      const [playerRes, matchesRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/players?email=${encodeURIComponent(userData.email)}`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/matches?status=SCHEDULED&limit=5`, { headers }),
+      ]);
+
+      if (playerRes.ok) {
+        const playerData = await playerRes.json();
+        const players = playerData.data || [];
+        // Find exact match by email
+        const myPlayer = players.find((p: any) => p.email?.toLowerCase() === userData.email.toLowerCase());
+        if (myPlayer) {
+          setPlayerInfo(myPlayer);
+        }
+      }
+
+      if (matchesRes.ok) {
+        const matchData = await matchesRes.json();
+        setUpcomingMatches(matchData.data?.slice(0, 3) || []);
+      }
+    } catch (error) {
+      console.error("Error fetching player dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAdminDashboard = async () => {
     try {
       const token = localStorage.getItem("token");
       const headers = {
@@ -107,6 +193,171 @@ export default function DashboardPage() {
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  // Player Dashboard
+  if (user?.role === 'USER') {
+    return (
+      <ResponsiveLayout>
+        <div className="container mx-auto p-4 lg:p-6">
+          {/* Header */}
+          <div className="mb-4 lg:mb-6">
+            <h1 className="mb-1 text-2xl font-bold text-foreground lg:mb-2 lg:text-3xl">
+              Welcome, {playerInfo?.fullName || user.firstName || 'Player'}!
+            </h1>
+            <p className="text-sm text-muted-foreground lg:text-base">
+              Cricket Fiesta 2026 - Your event dashboard
+            </p>
+          </div>
+
+          {/* Player Info Card */}
+          {playerInfo && (
+            <Card className="mb-4 lg:mb-6">
+              <CardHeader className="p-4 lg:p-6">
+                <CardTitle className="text-base lg:text-xl">Your Profile</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground lg:text-sm">Trainee ID</p>
+                    <p className="text-sm font-medium lg:text-base">{playerInfo.traineeId}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground lg:text-sm">Department</p>
+                    <p className="text-sm font-medium lg:text-base">{playerInfo.department}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground lg:text-sm">Team</p>
+                    {playerInfo.team ? (
+                      <Badge 
+                        className="mt-1 text-xs"
+                        style={{ backgroundColor: playerInfo.team.color, color: '#fff' }}
+                      >
+                        {playerInfo.team.name}
+                      </Badge>
+                    ) : (
+                      <p className="text-sm font-medium text-muted-foreground lg:text-base">Not assigned yet</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Food Status Card */}
+          <Card className="mb-4 lg:mb-6">
+            <CardHeader className="p-4 lg:p-6">
+              <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
+                <UtensilsCrossed className="h-4 w-4 lg:h-5 lg:w-5" />
+                Food Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+              {playerInfo?.foodRegistration ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    {playerInfo.foodRegistration.foodCollected ? (
+                      <>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                          <CheckCircle2 className="h-6 w-6 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-green-600">Food Collected</p>
+                          <p className="text-xs text-muted-foreground lg:text-sm">
+                            Collected at {new Date(playerInfo.foodRegistration.foodCollectedAt!).toLocaleString()}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/10">
+                          <Clock className="h-6 w-6 text-orange-500" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-orange-600">Not Yet Collected</p>
+                          <p className="text-xs text-muted-foreground lg:text-sm">
+                            Show your QR code at the food counter
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="rounded-lg bg-muted p-3 lg:p-4">
+                    <p className="text-xs text-muted-foreground lg:text-sm">Food Preference</p>
+                    <p className="text-sm font-medium lg:text-base">
+                      {playerInfo.foodRegistration.foodPreference === 'VEGETARIAN' ? 'Vegetarian' : 'Non-Vegetarian'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <XCircle className="h-5 w-5" />
+                  <p className="text-sm">No food registration found</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Matches */}
+          <Card className="mb-4 lg:mb-6">
+            <CardHeader className="p-4 lg:p-6">
+              <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
+                <Trophy className="h-4 w-4 lg:h-5 lg:w-5" />
+                Upcoming Matches
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+              {upcomingMatches.length > 0 ? (
+                <div className="space-y-3">
+                  {upcomingMatches.map((match) => (
+                    <div key={match.id} className="flex items-center justify-between rounded-lg bg-muted p-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-medium">{match.homeTeam.shortName}</span>
+                        <span className="text-muted-foreground">vs</span>
+                        <span className="font-medium">{match.awayTeam.shortName}</span>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {new Date(match.scheduledAt).toLocaleDateString()}
+                      </Badge>
+                    </div>
+                  ))}
+                  <Link href="/matches">
+                    <Button variant="outline" size="sm" className="w-full mt-2 bg-transparent text-xs lg:text-sm">
+                      View All Matches
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No upcoming matches scheduled</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Links */}
+          <Card>
+            <CardHeader className="p-4 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Quick Links</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Link href="/matches">
+                  <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" size="sm">
+                    <Trophy className="h-4 w-4" />
+                    View Matches
+                  </Button>
+                </Link>
+                <Link href="/teams">
+                  <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" size="sm">
+                    <Users className="h-4 w-4" />
+                    View Teams
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ResponsiveLayout>
     );
   }
   return (

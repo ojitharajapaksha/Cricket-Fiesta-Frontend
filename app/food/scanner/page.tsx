@@ -1,17 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, ScanLine, Search, CheckCircle2, XCircle, Loader2 } from "lucide-react"
+import { ArrowLeft, ScanLine, Search, CheckCircle2, XCircle, Loader2, Clock, UtensilsCrossed } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
+interface UserData {
+  id: string;
+  email: string;
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
+  firstName?: string;
+  lastName?: string;
+}
+
+interface FoodRegistration {
+  id: string;
+  traineeId: string;
+  fullName: string;
+  email: string;
+  department: string;
+  foodPreference: string;
+  foodCollected: boolean;
+  foodCollectedAt: string | null;
+  qrCode: string;
+}
+
 export default function ScannerPage() {
+  const [user, setUser] = useState<UserData | null>(null)
+  const [playerFoodStatus, setPlayerFoodStatus] = useState<FoodRegistration | null>(null)
+  const [loadingStatus, setLoadingStatus] = useState(true)
   const [scanning, setScanning] = useState(false)
   const [searching, setSearching] = useState(false)
   const [manualId, setManualId] = useState("")
@@ -25,6 +48,173 @@ export default function ScannerPage() {
     alreadyCollected?: boolean
   } | null>(null)
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      const userData = JSON.parse(storedUser)
+      setUser(userData)
+      
+      // If user is a player, fetch their food status
+      if (userData.role === 'USER') {
+        fetchPlayerFoodStatus(userData.email)
+      } else {
+        setLoadingStatus(false)
+      }
+    } else {
+      setLoadingStatus(false)
+    }
+  }, [])
+
+  const fetchPlayerFoodStatus = async (email: string) => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${API_URL}/api/food/registrations?email=${encodeURIComponent(email)}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const registrations = data.data || []
+        // Find registration matching user's email
+        const myRegistration = registrations.find((r: FoodRegistration) => 
+          r.email?.toLowerCase() === email.toLowerCase()
+        )
+        setPlayerFoodStatus(myRegistration || null)
+      }
+    } catch (error) {
+      console.error("Error fetching food status:", error)
+    } finally {
+      setLoadingStatus(false)
+    }
+  }
+
+  // Player Food Status View
+  if (user?.role === 'USER') {
+    if (loadingStatus) {
+      return (
+        <div className="flex h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )
+    }
+
+    return (
+      <ResponsiveLayout>
+        <div className="container mx-auto max-w-2xl p-4 lg:p-6">
+          {/* Header */}
+          <div className="mb-4 lg:mb-6">
+            <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">Food Status</h1>
+            <p className="text-xs text-muted-foreground lg:text-base">Check your meal registration and collection status</p>
+          </div>
+
+          {/* Food Status Card */}
+          <Card className="mb-4 lg:mb-6">
+            <CardHeader className="p-4 lg:p-6">
+              <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
+                <UtensilsCrossed className="h-5 w-5" />
+                Your Meal Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+              {playerFoodStatus ? (
+                <div className="space-y-4">
+                  {/* Status Banner */}
+                  <div className={`flex items-center gap-4 rounded-lg p-4 ${
+                    playerFoodStatus.foodCollected 
+                      ? 'bg-green-500/10 border border-green-500/20' 
+                      : 'bg-orange-500/10 border border-orange-500/20'
+                  }`}>
+                    {playerFoodStatus.foodCollected ? (
+                      <>
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500/20">
+                          <CheckCircle2 className="h-8 w-8 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-green-600 lg:text-xl">Meal Collected ✓</p>
+                          <p className="text-xs text-muted-foreground lg:text-sm">
+                            Collected on {new Date(playerFoodStatus.foodCollectedAt!).toLocaleDateString()} at {new Date(playerFoodStatus.foodCollectedAt!).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-500/20">
+                          <Clock className="h-8 w-8 text-orange-500" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-orange-600 lg:text-xl">Pending Collection</p>
+                          <p className="text-xs text-muted-foreground lg:text-sm">
+                            Show the QR code below at the food counter
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* QR Code Display */}
+                  {!playerFoodStatus.foodCollected && playerFoodStatus.qrCode && (
+                    <div className="flex flex-col items-center rounded-lg border bg-white p-6">
+                      <p className="mb-4 text-sm font-semibold text-gray-700 lg:text-base">Your Food QR Code</p>
+                      <div className="rounded-lg border-4 border-primary/20 p-2 bg-white">
+                        <img 
+                          src={playerFoodStatus.qrCode} 
+                          alt="Food QR Code" 
+                          className="h-48 w-48 lg:h-64 lg:w-64"
+                        />
+                      </div>
+                      <p className="mt-4 text-center text-xs text-gray-500 lg:text-sm">
+                        Show this QR code to the organizer at the food counter
+                      </p>
+                      <p className="mt-1 text-center text-xs font-medium text-primary">
+                        {playerFoodStatus.traineeId}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Registration Details */}
+                  <div className="rounded-lg border bg-card p-4">
+                    <h3 className="mb-3 text-sm font-semibold text-foreground lg:text-base">Registration Details</h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Name</p>
+                        <p className="text-sm font-medium lg:text-base">{playerFoodStatus.fullName}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Trainee ID</p>
+                        <p className="text-sm font-medium lg:text-base">{playerFoodStatus.traineeId}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Department</p>
+                        <p className="text-sm font-medium lg:text-base">{playerFoodStatus.department}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Food Preference</p>
+                        <p className="text-sm font-medium lg:text-base">
+                          {playerFoodStatus.foodPreference === 'VEGETARIAN' ? 'Vegetarian' : 'Non-Vegetarian'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <XCircle className="mb-3 h-12 w-12 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground lg:text-base">No Food Registration Found</p>
+                  <p className="text-xs text-muted-foreground lg:text-sm">
+                    Contact an organizer if you believe this is an error
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </ResponsiveLayout>
+    )
+  }
+
+  // Admin Scanner View (existing functionality)
   const handleStartScan = () => {
     setScanning(true)
     console.log("[v0] Starting QR scanner...")
