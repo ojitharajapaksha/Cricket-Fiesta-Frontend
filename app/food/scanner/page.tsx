@@ -1,34 +1,32 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Search, CheckCircle2, XCircle, Loader2, Clock, UtensilsCrossed, Camera, CameraOff, RefreshCw } from "lucide-react"
+import { ArrowLeft, Search, CheckCircle2, XCircle, Loader2, Clock, UtensilsCrossed, Camera, CameraOff, RefreshCw, Scan } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
 interface UserData {
-  id: string;
-  email: string;
-  role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
-  firstName?: string;
-  lastName?: string;
+  id: string
+  email: string
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'USER'
 }
 
 interface FoodRegistration {
-  id: string;
-  traineeId: string;
-  fullName: string;
-  email: string;
-  department: string;
-  foodPreference: string;
-  foodCollected: boolean;
-  foodCollectedAt: string | null;
-  qrCode: string;
+  id: string
+  traineeId: string
+  fullName: string
+  email: string
+  department: string
+  foodPreference: string
+  foodCollected: boolean
+  foodCollectedAt: string | null
+  qrCode: string
 }
 
 interface ScanResult {
@@ -43,133 +41,63 @@ interface ScanResult {
 
 // Player Food Status Component
 function PlayerFoodStatus({ email }: { email: string }) {
-  const [playerFoodStatus, setPlayerFoodStatus] = useState<FoodRegistration | null>(null)
+  const [status, setStatus] = useState<FoodRegistration | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchPlayerFoodStatus = async () => {
+    const fetchStatus = async () => {
       try {
         const token = localStorage.getItem("token")
-        const response = await fetch(`${API_URL}/api/food/registrations?email=${encodeURIComponent(email)}`, {
+        const res = await fetch(`${API_URL}/api/food/registrations?email=${encodeURIComponent(email)}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        
-        if (response.ok) {
-          const data = await response.json()
-          const registrations = data.data || []
-          const myRegistration = registrations.find((r: FoodRegistration) => 
+        if (res.ok) {
+          const data = await res.json()
+          const reg = (data.data || []).find((r: FoodRegistration) => 
             r.email?.toLowerCase() === email.toLowerCase()
           )
-          setPlayerFoodStatus(myRegistration || null)
+          setStatus(reg || null)
         }
-      } catch (error) {
-        console.error("Error fetching food status:", error)
+      } catch (e) {
+        console.error("Error:", e)
       } finally {
         setLoading(false)
       }
     }
-    fetchPlayerFoodStatus()
+    fetchStatus()
   }, [email])
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
   }
 
   return (
     <ResponsiveLayout>
       <div className="container mx-auto max-w-2xl px-3 py-4 lg:p-6">
-        <div className="mb-4 lg:mb-6">
-          <h1 className="mb-1 text-lg font-bold text-foreground lg:mb-2 lg:text-3xl">Food Status</h1>
-          <p className="text-xs text-muted-foreground lg:text-base">Check your meal registration and collection status</p>
-        </div>
-
+        <h1 className="mb-4 text-lg font-bold lg:text-3xl">Food Status</h1>
         <Card>
-          <CardHeader className="p-3 lg:p-6">
-            <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
-              <UtensilsCrossed className="h-4 w-4 lg:h-5 lg:w-5" />
-              Your Meal Status
-            </CardTitle>
+          <CardHeader className="p-4">
+            <CardTitle className="flex items-center gap-2 text-base"><UtensilsCrossed className="h-5 w-5" />Your Meal Status</CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
-            {playerFoodStatus ? (
-              <div className="space-y-3 lg:space-y-4">
-                <div className={`flex items-center gap-3 rounded-lg p-3 lg:gap-4 lg:p-4 ${
-                  playerFoodStatus.foodCollected 
-                    ? 'bg-green-500/10 border border-green-500/20' 
-                    : 'bg-orange-500/10 border border-orange-500/20'
-                }`}>
-                  {playerFoodStatus.foodCollected ? (
-                    <>
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20 lg:h-14 lg:w-14">
-                        <CheckCircle2 className="h-5 w-5 text-green-500 lg:h-8 lg:w-8" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-green-600 lg:text-xl">Meal Collected ✓</p>
-                        <p className="text-[10px] text-muted-foreground lg:text-sm">
-                          {new Date(playerFoodStatus.foodCollectedAt!).toLocaleString()}
-                        </p>
-                      </div>
-                    </>
+          <CardContent className="p-4 pt-0">
+            {status ? (
+              <div className="space-y-4">
+                <div className={`flex items-center gap-3 rounded-lg p-4 ${status.foodCollected ? 'bg-green-500/10' : 'bg-orange-500/10'}`}>
+                  {status.foodCollected ? (
+                    <><CheckCircle2 className="h-8 w-8 text-green-500" /><div><p className="font-semibold text-green-600">Meal Collected ✓</p><p className="text-xs text-muted-foreground">{new Date(status.foodCollectedAt!).toLocaleString()}</p></div></>
                   ) : (
-                    <>
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/20 lg:h-14 lg:w-14">
-                        <Clock className="h-5 w-5 text-orange-500 lg:h-8 lg:w-8" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-orange-600 lg:text-xl">Pending Collection</p>
-                        <p className="text-[10px] text-muted-foreground lg:text-sm">Show QR code at food counter</p>
-                      </div>
-                    </>
+                    <><Clock className="h-8 w-8 text-orange-500" /><div><p className="font-semibold text-orange-600">Pending Collection</p><p className="text-xs text-muted-foreground">Show QR code at food counter</p></div></>
                   )}
                 </div>
-
-                {!playerFoodStatus.foodCollected && playerFoodStatus.qrCode && (
-                  <div className="flex flex-col items-center rounded-lg border bg-white p-4 lg:p-6">
-                    <p className="mb-3 text-xs font-semibold text-gray-700 lg:mb-4 lg:text-base">Your Food QR Code</p>
-                    <div className="rounded-lg border-4 border-primary/20 bg-white p-2">
-                      <img src={playerFoodStatus.qrCode} alt="Food QR Code" className="h-36 w-36 lg:h-64 lg:w-64" />
-                    </div>
-                    <p className="mt-3 text-center text-[10px] text-gray-500 lg:mt-4 lg:text-sm">
-                      Show this QR code to the organizer
-                    </p>
-                    <p className="mt-1 text-xs font-medium text-primary">{playerFoodStatus.traineeId}</p>
+                {!status.foodCollected && status.qrCode && (
+                  <div className="flex flex-col items-center rounded-lg border bg-white p-4">
+                    <img src={status.qrCode} alt="QR" className="h-48 w-48" />
+                    <p className="mt-2 text-sm font-medium text-primary">{status.traineeId}</p>
                   </div>
                 )}
-
-                <div className="rounded-lg border bg-card p-3 lg:p-4">
-                  <h3 className="mb-2 text-xs font-semibold text-foreground lg:mb-3 lg:text-base">Details</h3>
-                  <div className="grid grid-cols-2 gap-2 lg:gap-3">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground lg:text-xs">Name</p>
-                      <p className="text-xs font-medium lg:text-base">{playerFoodStatus.fullName}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground lg:text-xs">Trainee ID</p>
-                      <p className="text-xs font-medium lg:text-base">{playerFoodStatus.traineeId}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground lg:text-xs">Department</p>
-                      <p className="text-xs font-medium lg:text-base">{playerFoodStatus.department}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground lg:text-xs">Preference</p>
-                      <p className="text-xs font-medium lg:text-base">
-                        {playerFoodStatus.foodPreference === 'VEGETARIAN' ? 'Veg' : 'Non-Veg'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-6 text-center lg:py-8">
-                <XCircle className="mb-2 h-10 w-10 text-muted-foreground lg:mb-3 lg:h-12 lg:w-12" />
-                <p className="text-sm font-medium text-foreground lg:text-base">No Food Registration Found</p>
-                <p className="text-xs text-muted-foreground lg:text-sm">Contact an organizer if this is an error</p>
-              </div>
+              <div className="py-8 text-center"><XCircle className="mx-auto h-12 w-12 text-muted-foreground" /><p className="mt-2">No registration found</p></div>
             )}
           </CardContent>
         </Card>
@@ -178,215 +106,188 @@ function PlayerFoodStatus({ email }: { email: string }) {
   )
 }
 
-// Admin QR Scanner Component
+// Admin QR Scanner Component  
 function AdminScanner() {
   const [scanning, setScanning] = useState(false)
   const [searching, setSearching] = useState(false)
   const [manualId, setManualId] = useState("")
-  const [cameraActive, setCameraActive] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
-
-  const html5QrCodeRef = useRef<any>(null)
-  const scannerContainerId = "qr-reader"
-
-  const stopCamera = useCallback(async () => {
-    if (html5QrCodeRef.current) {
-      try {
-        const state = html5QrCodeRef.current.getState()
-        if (state === 2) { // SCANNING state
-          await html5QrCodeRef.current.stop()
-        }
-        html5QrCodeRef.current.clear()
-      } catch (e) {
-        console.error('Error stopping scanner:', e)
-      }
-      html5QrCodeRef.current = null
-    }
-    setCameraActive(false)
-    setScanning(false)
-  }, [])
+  const [lastScanned, setLastScanned] = useState<string>("")
+  
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const animationRef = useRef<number | null>(null)
+  const html5QrRef = useRef<any>(null)
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (html5QrCodeRef.current) {
-        try {
-          html5QrCodeRef.current.stop()
-          html5QrCodeRef.current.clear()
-        } catch (e) {
-          // Ignore cleanup errors
-        }
-      }
+      stopScanning()
     }
   }, [])
 
-  const searchTrainee = useCallback(async (traineeId: string) => {
-    setSearching(true)
+  const stopScanning = () => {
+    // Stop animation frame
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current)
+      animationRef.current = null
+    }
     
-    try {
-      const token = localStorage.getItem("token")
-      const response = await fetch(`${API_URL}/api/food/registrations?traineeId=${encodeURIComponent(traineeId)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (!response.ok) throw new Error("Failed to search")
-
-      const data = await response.json()
-      const registrations = data.data || []
-      const registration = registrations.find((r: any) =>
-        r.traineeId.toLowerCase() === traineeId.toLowerCase()
-      )
-
-      if (!registration) {
-        setScanResult({
-          success: false,
-          name: "",
-          traineeId: traineeId,
-          preference: "",
-          message: "No registration found with this ID",
-        })
-        return
-      }
-
-      if (registration.foodCollected) {
-        setScanResult({
-          success: true,
-          id: registration.id,
-          name: registration.fullName,
-          traineeId: registration.traineeId,
-          preference: registration.foodPreference === "VEGETARIAN" ? "Vegetarian" : "Non-Vegetarian",
-          message: `Already collected at ${new Date(registration.foodCollectedAt).toLocaleTimeString()}`,
-          alreadyCollected: true,
-        })
-        return
-      }
-
-      setScanResult({
-        success: true,
-        id: registration.id,
-        name: registration.fullName,
-        traineeId: registration.traineeId,
-        preference: registration.foodPreference === "VEGETARIAN" ? "Vegetarian" : "Non-Vegetarian",
-        message: "Found! Click confirm to mark as collected.",
-        alreadyCollected: false,
-      })
-    } catch (error: any) {
-      console.error("Search error:", error)
-      toast.error("Search failed")
-      setScanResult({
-        success: false,
-        name: "",
-        traineeId: traineeId,
-        preference: "",
-        message: error.message || "Search failed",
-      })
-    } finally {
-      setSearching(false)
+    // Stop html5-qrcode if active
+    if (html5QrRef.current) {
+      try {
+        html5QrRef.current.stop().catch(() => {})
+        html5QrRef.current.clear()
+      } catch (e) {}
+      html5QrRef.current = null
     }
-  }, [])
+    
+    // Stop camera stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    
+    // Clear video
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    
+    setScanning(false)
+  }
 
-  const handleQRDetected = useCallback(async (data: string) => {
+  const startScanning = async () => {
+    setCameraError(null)
+    setScanResult(null)
+    setLastScanned("")
+    setScanning(true)
+
+    try {
+      // Use html5-qrcode library for scanning
+      const { Html5Qrcode } = await import('html5-qrcode')
+      
+      // Get cameras
+      const cameras = await Html5Qrcode.getCameras()
+      console.log("Cameras found:", cameras)
+      
+      if (!cameras || cameras.length === 0) {
+        throw new Error("No camera found")
+      }
+
+      // Find back camera (prefer environment facing)
+      const backCam = cameras.find(c => 
+        c.label.toLowerCase().includes('back') || 
+        c.label.toLowerCase().includes('rear') ||
+        c.label.toLowerCase().includes('environment')
+      )
+      const cameraId = backCam?.id || cameras[cameras.length - 1].id
+
+      // Create scanner
+      html5QrRef.current = new Html5Qrcode("qr-scanner-container", { verbose: false })
+      
+      await html5QrRef.current.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        async (text: string) => {
+          // Prevent duplicate scans
+          if (text === lastScanned) return
+          setLastScanned(text)
+          
+          console.log("QR Scanned:", text)
+          toast.success("QR Code detected!")
+          
+          // Stop camera and process
+          stopScanning()
+          await processQRCode(text)
+        },
+        () => {} // Ignore scan failures
+      )
+      
+      toast.success("Camera ready!")
+      
+    } catch (error: any) {
+      console.error("Camera error:", error)
+      setScanning(false)
+      
+      let errorMsg = "Failed to start camera"
+      if (error.name === 'NotAllowedError' || error.message?.includes('Permission')) {
+        errorMsg = "Camera permission denied. Please allow camera access in your browser settings."
+      } else if (error.name === 'NotFoundError' || error.message?.includes('No camera')) {
+        errorMsg = "No camera found on this device"
+      } else if (error.message) {
+        errorMsg = error.message
+      }
+      
+      setCameraError(errorMsg)
+      toast.error(errorMsg)
+    }
+  }
+
+  const processQRCode = async (data: string) => {
     let traineeId = data.trim()
     
-    // Try to parse if JSON
+    // Try to parse JSON
     try {
       const parsed = JSON.parse(data)
       traineeId = parsed.traineeId || parsed.id || data
-    } catch {
-      // Not JSON, use as-is
-    }
+    } catch {}
 
-    toast.info(`QR detected: ${traineeId}`)
     await searchTrainee(traineeId)
-  }, [searchTrainee])
+  }
 
-  const startCamera = useCallback(async () => {
-    setCameraError(null)
-    setScanning(true)
+  const searchTrainee = async (traineeId: string) => {
+    setSearching(true)
     setScanResult(null)
-
+    
     try {
-      const { Html5Qrcode } = await import('html5-qrcode')
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${API_URL}/api/food/registrations?traineeId=${encodeURIComponent(traineeId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!res.ok) throw new Error("Search failed")
+
+      const data = await res.json()
+      const reg = (data.data || []).find((r: any) =>
+        r.traineeId.toLowerCase() === traineeId.toLowerCase()
+      )
+
+      if (!reg) {
+        setScanResult({ success: false, name: "", traineeId, preference: "", message: "No registration found" })
+        toast.error("No registration found for: " + traineeId)
+        return
+      }
+
+      if (reg.foodCollected) {
+        setScanResult({
+          success: true, id: reg.id, name: reg.fullName, traineeId: reg.traineeId,
+          preference: reg.foodPreference === "VEGETARIAN" ? "Veg" : "Non-Veg",
+          message: `Already collected at ${new Date(reg.foodCollectedAt).toLocaleTimeString()}`,
+          alreadyCollected: true,
+        })
+        toast.warning("Food already collected!")
+        return
+      }
+
+      setScanResult({
+        success: true, id: reg.id, name: reg.fullName, traineeId: reg.traineeId,
+        preference: reg.foodPreference === "VEGETARIAN" ? "Veg" : "Non-Veg",
+        message: "Ready to collect",
+        alreadyCollected: false,
+      })
+      toast.success("Found: " + reg.fullName)
       
-      // Create scanner instance
-      html5QrCodeRef.current = new Html5Qrcode(scannerContainerId)
-
-      const qrCodeSuccessCallback = (decodedText: string) => {
-        // Stop scanning after successful read
-        stopCamera()
-        handleQRDetected(decodedText)
-      }
-
-      const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-      }
-
-      // Try back camera first, fall back to any camera
-      try {
-        await html5QrCodeRef.current.start(
-          { facingMode: "environment" },
-          config,
-          qrCodeSuccessCallback,
-          () => {} // Ignore errors during scanning
-        )
-        setCameraActive(true)
-        toast.success('Camera started - point at QR code')
-      } catch (backCamError) {
-        console.log('Back camera failed, trying front camera:', backCamError)
-        // Try front camera
-        try {
-          await html5QrCodeRef.current.start(
-            { facingMode: "user" },
-            config,
-            qrCodeSuccessCallback,
-            () => {}
-          )
-          setCameraActive(true)
-          toast.success('Camera started - point at QR code')
-        } catch (frontCamError) {
-          console.log('Front camera failed, trying any camera:', frontCamError)
-          // Try any available camera
-          const devices = await Html5Qrcode.getCameras()
-          if (devices && devices.length > 0) {
-            await html5QrCodeRef.current.start(
-              devices[0].id,
-              config,
-              qrCodeSuccessCallback,
-              () => {}
-            )
-            setCameraActive(true)
-            toast.success('Camera started - point at QR code')
-          } else {
-            throw new Error('No camera found on this device')
-          }
-        }
-      }
     } catch (error: any) {
-      console.error('Camera error:', error)
-      setCameraError(error.message || 'Failed to start camera')
-      setScanning(false)
-      setCameraActive(false)
-      
-      if (error.message?.includes('Permission') || error.name === 'NotAllowedError') {
-        toast.error('Camera permission denied. Please allow camera access in browser settings.')
-      } else if (error.message?.includes('No camera') || error.name === 'NotFoundError') {
-        toast.error('No camera found on this device.')
-      } else {
-        toast.error('Failed to start camera: ' + (error.message || 'Unknown error'))
-      }
+      setScanResult({ success: false, name: "", traineeId, preference: "", message: error.message || "Search failed" })
+      toast.error("Search failed")
+    } finally {
+      setSearching(false)
     }
-  }, [stopCamera, handleQRDetected])
-
-  const handleManualSearch = async () => {
-    if (!manualId.trim()) {
-      toast.error("Please enter a Trainee ID")
-      return
-    }
-    setScanResult(null)
-    await searchTrainee(manualId.trim())
   }
 
   const handleConfirm = async () => {
@@ -394,217 +295,163 @@ function AdminScanner() {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`${API_URL}/api/food/registrations/${scanResult.id}/collect`, {
+      const res = await fetch(`${API_URL}/api/food/registrations/${scanResult.id}/collect`, {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to mark as collected")
-      }
+      if (!res.ok) throw new Error("Failed to update")
 
-      toast.success("Food marked as collected!")
-      setScanResult({
-        ...scanResult,
-        message: "Meal marked as collected!",
-        alreadyCollected: true,
-      })
+      toast.success("✅ Food marked as collected!")
+      setScanResult({ ...scanResult, message: "Collection confirmed!", alreadyCollected: true })
       setManualId("")
     } catch (error: any) {
-      console.error("Confirm error:", error)
-      toast.error(error.message || "Failed to mark as collected")
+      toast.error(error.message || "Failed")
     }
   }
 
-  const handleStartScan = () => {
-    if (cameraActive) {
-      stopCamera()
-    } else {
-      startCamera()
+  const handleManualSearch = () => {
+    if (!manualId.trim()) {
+      toast.error("Enter a Trainee ID")
+      return
     }
+    searchTrainee(manualId.trim())
   }
 
   return (
     <ResponsiveLayout>
-      <div className="container mx-auto max-w-lg px-3 py-4 lg:max-w-3xl lg:p-6">
+      <div className="container mx-auto max-w-lg px-3 py-4 lg:max-w-2xl lg:p-6">
         {/* Header */}
-        <div className="mb-3 lg:mb-6">
+        <div className="mb-4">
           <Link href="/food">
-            <Button variant="ghost" className="mb-2 h-8 gap-1 px-2 text-xs lg:mb-4 lg:h-10 lg:gap-2 lg:px-4 lg:text-sm">
-              <ArrowLeft className="h-3 w-3 lg:h-4 lg:w-4" />
-              Back
+            <Button variant="ghost" size="sm" className="mb-2 gap-1 text-xs">
+              <ArrowLeft className="h-3 w-3" /> Back
             </Button>
           </Link>
-          <h1 className="text-lg font-bold text-foreground lg:text-3xl">QR Scanner</h1>
-          <p className="text-xs text-muted-foreground lg:text-base">Scan QR codes for meal distribution</p>
+          <h1 className="text-xl font-bold lg:text-3xl">QR Scanner</h1>
+          <p className="text-sm text-muted-foreground">Scan QR codes for meal distribution</p>
         </div>
 
-        {/* Scanner Card */}
-        <Card className="mb-3 lg:mb-6">
-          <CardHeader className="p-3 lg:p-6">
-            <CardTitle className="text-sm lg:text-xl">Scan QR Code</CardTitle>
-            <CardDescription className="text-xs lg:text-sm">Point camera at participant's QR code</CardDescription>
+        {/* Scanner */}
+        <Card className="mb-4">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Scan className="h-5 w-5" /> QR Scanner
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
-            <div className="space-y-3">
-              {/* Camera View */}
-              <div className="relative overflow-hidden rounded-lg border-2 border-dashed border-border bg-black">
-                {/* Scanner container - html5-qrcode will render here */}
-                <div 
-                  id={scannerContainerId} 
-                  className="w-full"
-                  style={{ 
-                    minHeight: cameraActive ? '300px' : '0px',
-                    display: cameraActive ? 'block' : 'none'
-                  }}
-                />
-                
-                {/* Placeholder when camera is off */}
-                {!cameraActive && !cameraError && !scanning && (
-                  <div className="flex min-h-[200px] flex-col items-center justify-center p-4 lg:min-h-[300px]">
-                    <Camera className="mb-2 h-10 w-10 text-gray-400 lg:mb-4 lg:h-16 lg:w-16" />
-                    <p className="text-xs font-medium text-white lg:text-sm">Ready to scan</p>
-                    <p className="text-[10px] text-gray-400 lg:text-xs">Click button below to start</p>
-                  </div>
-                )}
-
-                {/* Loading state */}
-                {scanning && !cameraActive && !cameraError && (
-                  <div className="flex min-h-[200px] flex-col items-center justify-center p-4 lg:min-h-[300px]">
-                    <Loader2 className="mb-2 h-10 w-10 animate-spin text-primary lg:mb-4 lg:h-16 lg:w-16" />
-                    <p className="text-xs font-medium text-white lg:text-sm">Starting camera...</p>
-                    <p className="text-[10px] text-gray-400 lg:text-xs">Allow camera access if prompted</p>
-                  </div>
-                )}
-
-                {/* Camera Error */}
-                {cameraError && (
-                  <div className="flex min-h-[200px] flex-col items-center justify-center p-4 lg:min-h-[300px]">
-                    <CameraOff className="mb-2 h-10 w-10 text-destructive lg:mb-4 lg:h-16 lg:w-16" />
-                    <p className="text-xs font-medium text-white lg:text-sm">Camera Error</p>
-                    <p className="mb-3 max-w-xs text-center text-[10px] text-gray-400 lg:text-xs">{cameraError}</p>
-                    <Button variant="outline" size="sm" className="h-7 text-xs lg:h-9 lg:text-sm" onClick={() => { setCameraError(null); startCamera() }}>
-                      <RefreshCw className="mr-1 h-3 w-3 lg:mr-2 lg:h-4 lg:w-4" />
-                      Retry
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Camera Button */}
-              <Button 
-                onClick={handleStartScan} 
-                disabled={searching} 
-                variant={cameraActive ? "destructive" : "default"}
-                className="h-10 w-full gap-2 text-sm lg:h-12 lg:text-base"
-              >
-                {cameraActive ? (
-                  <>
-                    <CameraOff className="h-4 w-4 lg:h-5 lg:w-5" />
-                    Stop Camera
-                  </>
-                ) : (
-                  <>
-                    <Camera className="h-4 w-4 lg:h-5 lg:w-5" />
-                    Start Scanning
-                  </>
-                )}
-              </Button>
+          <CardContent className="p-4 pt-2">
+            {/* Scanner Container */}
+            <div className="relative mb-4 overflow-hidden rounded-lg bg-black" style={{ minHeight: scanning ? '350px' : '200px' }}>
+              {/* Html5 QR Scanner renders here */}
+              <div id="qr-scanner-container" className={scanning ? 'block' : 'hidden'} style={{ width: '100%' }} />
+              
+              {/* Hidden elements for native approach */}
+              <video ref={videoRef} className="hidden" playsInline muted autoPlay />
+              <canvas ref={canvasRef} className="hidden" />
+              
+              {/* Idle State */}
+              {!scanning && !cameraError && (
+                <div className="flex h-[200px] flex-col items-center justify-center text-white">
+                  <Camera className="mb-3 h-12 w-12 opacity-50" />
+                  <p className="text-sm">Tap button below to scan</p>
+                </div>
+              )}
+              
+              {/* Error State */}
+              {cameraError && (
+                <div className="flex h-[200px] flex-col items-center justify-center p-4 text-center text-white">
+                  <CameraOff className="mb-3 h-12 w-12 text-red-400" />
+                  <p className="mb-2 text-sm font-medium">Camera Error</p>
+                  <p className="mb-3 text-xs text-gray-400">{cameraError}</p>
+                  <Button size="sm" variant="outline" onClick={() => { setCameraError(null); startScanning(); }}>
+                    <RefreshCw className="mr-1 h-3 w-3" /> Retry
+                  </Button>
+                </div>
+              )}
             </div>
+
+            {/* Scan Button */}
+            <Button
+              onClick={scanning ? stopScanning : startScanning}
+              disabled={searching}
+              variant={scanning ? "destructive" : "default"}
+              className="h-12 w-full gap-2 text-base"
+            >
+              {scanning ? (
+                <><CameraOff className="h-5 w-5" /> Stop Camera</>
+              ) : (
+                <><Camera className="h-5 w-5" /> Start Scanning</>
+              )}
+            </Button>
           </CardContent>
         </Card>
 
         {/* Manual Search */}
-        <Card className="mb-3 lg:mb-6">
-          <CardHeader className="p-3 lg:p-6">
-            <CardTitle className="text-sm lg:text-xl">Manual Search</CardTitle>
-            <CardDescription className="text-xs lg:text-sm">Search by Trainee ID</CardDescription>
+        <Card className="mb-4">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base">Manual Search</CardTitle>
+            <CardDescription className="text-xs">Enter Trainee ID if QR code doesn't work</CardDescription>
           </CardHeader>
-          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+          <CardContent className="p-4 pt-2">
             <div className="flex gap-2">
               <Input
-                placeholder="Enter Trainee ID..."
+                placeholder="Trainee ID (e.g., TRN001)"
                 value={manualId}
-                onChange={(e) => setManualId(e.target.value)}
+                onChange={(e) => setManualId(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
-                className="h-10 text-sm lg:h-12 lg:text-base"
+                className="h-12 text-base uppercase"
               />
-              <Button onClick={handleManualSearch} disabled={searching} className="h-10 gap-1 px-3 lg:h-12 lg:gap-2 lg:px-4">
-                {searching ? (
-                  <Loader2 className="h-4 w-4 animate-spin lg:h-5 lg:w-5" />
-                ) : (
-                  <Search className="h-4 w-4 lg:h-5 lg:w-5" />
-                )}
-                <span className="hidden sm:inline">{searching ? "..." : "Search"}</span>
+              <Button onClick={handleManualSearch} disabled={searching} className="h-12 px-4">
+                {searching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Scan Result */}
+        {/* Result */}
         {scanResult && (
-          <Card className="mb-3 lg:mb-6">
-            <CardHeader className="p-3 lg:p-6">
-              <CardTitle className="flex items-center gap-2 text-sm lg:text-xl">
+          <Card className={`mb-4 border-2 ${scanResult.success ? (scanResult.alreadyCollected ? 'border-yellow-500' : 'border-green-500') : 'border-red-500'}`}>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 {scanResult.success ? (
-                  <CheckCircle2 className={`h-4 w-4 lg:h-5 lg:w-5 ${scanResult.alreadyCollected ? 'text-yellow-500' : 'text-green-500'}`} />
+                  <CheckCircle2 className={`h-5 w-5 ${scanResult.alreadyCollected ? 'text-yellow-500' : 'text-green-500'}`} />
                 ) : (
-                  <XCircle className="h-4 w-4 text-destructive lg:h-5 lg:w-5" />
+                  <XCircle className="h-5 w-5 text-red-500" />
                 )}
-                Scan Result
+                {scanResult.success ? (scanResult.alreadyCollected ? "Already Collected" : "Found") : "Not Found"}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+            <CardContent className="p-4 pt-2">
               {scanResult.success ? (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 rounded-lg border p-3 lg:gap-3 lg:p-4">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground lg:text-xs">Name</p>
-                      <p className="text-sm font-medium lg:text-lg">{scanResult.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground lg:text-xs">Trainee ID</p>
-                      <p className="text-sm font-medium lg:text-lg">{scanResult.traineeId}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-[10px] text-muted-foreground lg:text-xs">Preference</p>
-                      <p className="text-sm font-medium lg:text-lg">{scanResult.preference}</p>
+                  <div className="rounded-lg bg-muted p-3">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div><span className="text-muted-foreground">Name:</span><p className="font-semibold">{scanResult.name}</p></div>
+                      <div><span className="text-muted-foreground">ID:</span><p className="font-semibold">{scanResult.traineeId}</p></div>
+                      <div className="col-span-2"><span className="text-muted-foreground">Preference:</span><p className="font-semibold">{scanResult.preference}</p></div>
                     </div>
                   </div>
-
-                  <div className={`rounded-lg p-3 text-xs lg:p-4 lg:text-sm ${
-                    scanResult.alreadyCollected ? 'bg-yellow-500/10 text-yellow-600' : 'bg-green-500/10 text-green-600'
-                  }`}>
+                  
+                  <div className={`rounded-lg p-3 text-sm ${scanResult.alreadyCollected ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
                     {scanResult.message}
                   </div>
 
                   <div className="flex gap-2">
                     {!scanResult.alreadyCollected && (
-                      <Button onClick={handleConfirm} className="h-10 flex-1 text-sm lg:h-12 lg:text-base">
+                      <Button onClick={handleConfirm} className="h-12 flex-1 bg-green-600 text-base hover:bg-green-700">
                         ✓ Confirm Collection
                       </Button>
                     )}
-                    <Button 
-                      onClick={() => setScanResult(null)} 
-                      variant="outline" 
-                      className={`h-10 text-sm lg:h-12 lg:text-base ${scanResult.alreadyCollected ? 'w-full' : 'flex-1'}`}
-                    >
+                    <Button variant="outline" onClick={() => { setScanResult(null); setManualId(""); }} className={`h-12 text-base ${scanResult.alreadyCollected ? 'w-full' : 'flex-1'}`}>
                       {scanResult.alreadyCollected ? "Scan Next" : "Cancel"}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive lg:p-4 lg:text-sm">
-                    <p className="font-medium">Not Found</p>
-                    <p>ID: {scanResult.traineeId}</p>
-                    <p>{scanResult.message}</p>
-                  </div>
-                  <Button onClick={() => setScanResult(null)} variant="outline" className="h-10 w-full text-sm lg:h-12 lg:text-base">
+                  <p className="text-sm text-red-600">ID: {scanResult.traineeId}</p>
+                  <p className="text-sm">{scanResult.message}</p>
+                  <Button variant="outline" onClick={() => setScanResult(null)} className="h-12 w-full">
                     Try Again
                   </Button>
                 </div>
@@ -613,20 +460,18 @@ function AdminScanner() {
           </Card>
         )}
 
-        {/* Instructions */}
+        {/* Tips */}
         <Card>
-          <CardHeader className="p-3 lg:p-6">
-            <CardTitle className="text-sm lg:text-xl">How to Use</CardTitle>
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base">Tips</CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
-            <ol className="list-decimal space-y-1 pl-4 text-xs text-muted-foreground lg:space-y-2 lg:text-sm">
-              <li>Click "Start Scanning" button</li>
-              <li>Allow camera permission when prompted</li>
-              <li>Point camera at participant's QR code</li>
-              <li>QR code will be detected automatically</li>
-              <li>Verify details and click "Confirm Collection"</li>
-              <li>Use manual search if QR code is damaged</li>
-            </ol>
+          <CardContent className="p-4 pt-2">
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              <li>• Hold phone steady, 6-12 inches from QR code</li>
+              <li>• Ensure good lighting</li>
+              <li>• Allow camera permission when prompted</li>
+              <li>• Use manual search if QR scan fails</li>
+            </ul>
           </CardContent>
         </Card>
       </div>
@@ -634,32 +479,24 @@ function AdminScanner() {
   )
 }
 
-// Main Page Component
+// Main Component
 export default function ScannerPage() {
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
-    }
+    const stored = localStorage.getItem('user')
+    if (stored) setUser(JSON.parse(stored))
     setLoading(false)
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
   }
 
-  // Show player view for USER role
   if (user?.role === 'USER') {
     return <PlayerFoodStatus email={user.email} />
   }
 
-  // Show admin scanner for ADMIN and SUPER_ADMIN
   return <AdminScanner />
 }
