@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Trophy, Users, Home, ArrowLeft } from "lucide-react"
+import { Trophy, Users, Home, ArrowLeft, UserCircle } from "lucide-react"
 
 interface CommitteeMember {
   id: string
@@ -75,7 +75,13 @@ export default function OCMembersPage() {
               <Link href="/oc-members">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm gap-1.5 bg-accent">
                   <Users className="h-4 w-4" />
-                  Organizing Committee Members
+                  OC Members
+                </Button>
+              </Link>
+              <Link href="/all-players">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm gap-1.5">
+                  <UserCircle className="h-4 w-4" />
+                  Players
                 </Button>
               </Link>
             </nav>
@@ -86,6 +92,11 @@ export default function OCMembersPage() {
                 <Link href="/">
                   <Button variant="ghost" size="sm" className="text-xs px-2">
                     <Home className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/all-players">
+                  <Button variant="ghost" size="sm" className="text-xs px-2">
+                    <UserCircle className="h-4 w-4" />
                   </Button>
                 </Link>
               </div>

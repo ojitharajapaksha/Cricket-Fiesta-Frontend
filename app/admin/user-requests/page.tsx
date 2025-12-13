@@ -302,7 +302,7 @@ export default function UserRequestsPage() {
           </Link>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground lg:text-2xl">User Login Requests</h1>
-            <p className="text-xs text-muted-foreground lg:text-sm">Approve or reject first-time login requests from players and OC members</p>
+            <p className="text-xs text-muted-foreground lg:text-sm">Approve or reject first-time login requests from players and Organizing Committee Members</p>
           </div>
           <Button variant="outline" size="sm" onClick={fetchRequests} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />

@@ -470,7 +470,7 @@ export default function LoginPage() {
 
         {/* Help Text */}
         <p className="mt-4 text-center text-[10px] text-muted-foreground lg:mt-6 lg:text-xs">
-          Players & OC Members: Enter your registered email to receive an OTP
+          Players & Organizing Committee Members: Enter your registered email to receive an OTP
           <br />
           Organizers: Login with your approved admin account
         </p>

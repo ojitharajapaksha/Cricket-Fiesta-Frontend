@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, Users, UtensilsCrossed, CalendarDays, Award, BarChart3, Home } from "lucide-react"
+import { Trophy, Users, UtensilsCrossed, CalendarDays, Award, BarChart3, Home, UserCircle } from "lucide-react"
 import { CountdownTimer } from "@/components/countdown-timer"
 import { StatsSection } from "@/components/stats-section"
 import { AnnouncementPopup } from "@/components/announcement-popup"
@@ -43,6 +43,12 @@ export default function HomePage() {
                   OC Members
                 </Button>
               </Link>
+              <Link href="/all-players">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm gap-1.5">
+                  <UserCircle className="h-4 w-4" />
+                  Players
+                </Button>
+              </Link>
             </nav>
             
             <div className="flex items-center gap-2 lg:gap-3">
@@ -51,6 +57,11 @@ export default function HomePage() {
                 <Link href="/oc-members">
                   <Button variant="ghost" size="sm" className="text-xs px-2">
                     <Users className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/all-players">
+                  <Button variant="ghost" size="sm" className="text-xs px-2">
+                    <UserCircle className="h-4 w-4" />
                   </Button>
                 </Link>
               </div>
