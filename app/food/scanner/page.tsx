@@ -219,6 +219,7 @@ export default function ScannerPage() {
   // Admin Scanner View (with real camera)
   const videoRef = useRef<HTMLVideoElement>(null)
   const scannerRef = useRef<any>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   // Cleanup camera on unmount
   useEffect(() => {
@@ -230,16 +231,41 @@ export default function ScannerPage() {
   const startCamera = async () => {
     setCameraError(null)
     setScanning(true)
+    setScanResult(null)
     
     try {
-      // Dynamically import QrScanner
-      const QrScanner = (await import('qr-scanner')).default
+      // First check if camera is available and get permission
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported in this browser. Please use a modern browser.')
+      }
+
+      // Request camera permission explicitly first
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment', // Prefer back camera
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      })
+      
+      // Store stream for cleanup
+      streamRef.current = stream
       
       if (!videoRef.current) {
         throw new Error('Video element not found')
       }
 
-      // Create scanner instance
+      // Set video source
+      videoRef.current.srcObject = stream
+      await videoRef.current.play()
+
+      // Dynamically import QrScanner
+      const QrScanner = (await import('qr-scanner')).default
+      
+      // Set the worker path from CDN
+      QrScanner.WORKER_PATH = 'https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js'
+
+      // Create scanner instance with existing video stream
       scannerRef.current = new QrScanner(
         videoRef.current,
         (result: any) => {
@@ -250,35 +276,62 @@ export default function ScannerPage() {
           returnDetailedScanResult: true,
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          preferredCamera: 'environment', // Use back camera on mobile
+          maxScansPerSecond: 5,
         }
       )
 
       await scannerRef.current.start()
       setCameraActive(true)
-      toast.success('Camera started')
+      toast.success('Camera started - point at QR code')
     } catch (error: any) {
       console.error('Camera error:', error)
+      
+      // Clean up any partial stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
+      }
+      
       setCameraError(error.message || 'Failed to access camera')
       setScanning(false)
       setCameraActive(false)
       
-      if (error.name === 'NotAllowedError') {
-        toast.error('Camera permission denied. Please allow camera access.')
-      } else if (error.name === 'NotFoundError') {
+      if (error.name === 'NotAllowedError' || error.message?.includes('Permission')) {
+        toast.error('Camera permission denied. Please allow camera access in your browser settings.')
+      } else if (error.name === 'NotFoundError' || error.message?.includes('not found')) {
         toast.error('No camera found on this device.')
+      } else if (error.name === 'NotReadableError') {
+        toast.error('Camera is in use by another application.')
+      } else if (error.name === 'OverconstrainedError') {
+        toast.error('Camera does not meet requirements.')
       } else {
-        toast.error('Failed to start camera: ' + error.message)
+        toast.error('Failed to start camera: ' + (error.message || 'Unknown error'))
       }
     }
   }
 
   const stopCamera = () => {
     if (scannerRef.current) {
-      scannerRef.current.stop()
-      scannerRef.current.destroy()
+      try {
+        scannerRef.current.stop()
+        scannerRef.current.destroy()
+      } catch (e) {
+        console.error('Error stopping scanner:', e)
+      }
       scannerRef.current = null
     }
+    
+    // Stop all video tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    
+    // Clear video source
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    
     setCameraActive(false)
     setScanning(false)
   }
@@ -509,21 +562,32 @@ export default function ScannerPage() {
           <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
             <div className="space-y-3 lg:space-y-4">
               {/* Camera View */}
-              <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-black">
+              <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-black min-h-[300px]">
                 {/* Video element for camera */}
                 <video 
                   ref={videoRef}
                   className={`h-full w-full object-cover ${cameraActive ? 'block' : 'hidden'}`}
                   playsInline
                   muted
+                  autoPlay
+                  style={{ transform: 'scaleX(1)' }}
                 />
                 
                 {/* Placeholder when camera is off */}
-                {!cameraActive && !cameraError && (
+                {!cameraActive && !cameraError && !scanning && (
                   <div className="text-center">
                     <Camera className="mx-auto mb-3 h-12 w-12 text-muted-foreground lg:mb-4 lg:h-16 lg:w-16" />
                     <p className="mb-1.5 text-xs font-medium text-white lg:mb-2 lg:text-sm">Ready to scan</p>
                     <p className="text-[10px] text-gray-400 lg:text-xs">Click the button below to start camera</p>
+                  </div>
+                )}
+
+                {/* Loading state */}
+                {scanning && !cameraActive && !cameraError && (
+                  <div className="text-center">
+                    <Loader2 className="mx-auto mb-3 h-12 w-12 text-primary animate-spin lg:mb-4 lg:h-16 lg:w-16" />
+                    <p className="mb-1.5 text-xs font-medium text-white lg:mb-2 lg:text-sm">Starting camera...</p>
+                    <p className="text-[10px] text-gray-400 lg:text-xs">Please allow camera access if prompted</p>
                   </div>
                 )}
 
@@ -533,6 +597,17 @@ export default function ScannerPage() {
                     <CameraOff className="mx-auto mb-3 h-12 w-12 text-destructive lg:mb-4 lg:h-16 lg:w-16" />
                     <p className="mb-1.5 text-xs font-medium text-white lg:mb-2 lg:text-sm">Camera Error</p>
                     <p className="text-[10px] text-gray-400 lg:text-xs max-w-xs">{cameraError}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-3"
+                      onClick={() => {
+                        setCameraError(null)
+                        startCamera()
+                      }}
+                    >
+                      Try Again
+                    </Button>
                   </div>
                 )}
 
