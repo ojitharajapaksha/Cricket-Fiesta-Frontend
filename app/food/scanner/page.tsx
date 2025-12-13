@@ -319,22 +319,38 @@ function AdminScanner() {
   }
 
   const handleConfirm = async () => {
-    if (!scanResult?.id) return
+    if (!scanResult?.id) {
+      toast.error("No registration ID found")
+      return
+    }
 
     try {
       const token = localStorage.getItem("token")
+      console.log("Confirming collection for ID:", scanResult.id)
+      
       const res = await fetch(`${API_URL}/api/food/registrations/${scanResult.id}/collect`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        method: "POST", // Backend uses POST not PUT
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          "Content-Type": "application/json" 
+        },
       })
 
-      if (!res.ok) throw new Error("Failed to update")
+      const data = await res.json()
+      console.log("Response:", res.status, data)
 
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update")
+      }
+
+      // Play success beep
+      playBeep(1000, 200)
       toast.success("✅ Food marked as collected!")
-      setScanResult({ ...scanResult, message: "Collection confirmed!", alreadyCollected: true })
+      setScanResult({ ...scanResult, message: "Collection confirmed! ✅", alreadyCollected: true })
       setManualId("")
     } catch (error: any) {
-      toast.error(error.message || "Failed")
+      console.error("Confirm error:", error)
+      toast.error(error.message || "Failed to confirm collection")
     }
   }
 
