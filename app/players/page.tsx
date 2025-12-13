@@ -23,6 +23,7 @@ interface Player {
   experienceLevel: string;
   attended: boolean;
   attendedAt: string | null;
+  projectName: string | null;
   team: {
     id: string;
     name: string;
@@ -224,6 +225,7 @@ export default function PlayersPage() {
                   <TableHead>Player Name</TableHead>
                   <TableHead>Gender</TableHead>
                   <TableHead>Department</TableHead>
+                  <TableHead>Project</TableHead>
                   <TableHead>Position</TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Team</TableHead>
@@ -234,7 +236,7 @@ export default function PlayersPage() {
               <TableBody>
                 {filteredPlayers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                       No players found
                     </TableCell>
                   </TableRow>
@@ -244,6 +246,13 @@ export default function PlayersPage() {
                       <TableCell className="font-medium">{player.fullName}</TableCell>
                       <TableCell>{player.gender}</TableCell>
                       <TableCell>{player.department}</TableCell>
+                      <TableCell>
+                        {player.projectName ? (
+                          <span className="text-sm">{player.projectName}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">{player.position}</Badge>
                       </TableCell>
@@ -318,6 +327,9 @@ export default function PlayersPage() {
                     <div className="flex-1 min-w-0">
                       <h3 className="truncate text-sm font-semibold">{player.fullName}</h3>
                       <p className="text-xs text-muted-foreground">{player.department}</p>
+                      {player.projectName && (
+                        <p className="text-xs text-primary mt-0.5">📁 {player.projectName}</p>
+                      )}
                       <div className="mt-2 flex flex-wrap gap-1">
                         <Badge variant="outline" className="text-[10px]">{player.position}</Badge>
                         {player.team && player.team.shortName ? (

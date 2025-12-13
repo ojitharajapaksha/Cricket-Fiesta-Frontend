@@ -5,7 +5,10 @@ import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck, QrCode } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck, QrCode, Building2 } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -20,6 +23,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import Link from "next/link"
 import QRCode from "qrcode"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface UserData {
   id: string;
@@ -32,6 +36,7 @@ interface UserData {
   userType?: 'player' | 'committee' | 'food' | 'user';
   committeeId?: string;
   playerId?: string;
+  projectName?: string;
 }
 
 interface DashboardStats {
@@ -111,6 +116,11 @@ export default function DashboardPage() {
   const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [qrCodeImage, setQrCodeImage] = useState<string>('');
+  
+  // Project Name Modal States
+  const [showProjectNameModal, setShowProjectNameModal] = useState(false);
+  const [projectNameInput, setProjectNameInput] = useState('');
+  const [savingProjectName, setSavingProjectName] = useState(false);
 
   useEffect(() => {
     // Load user from localStorage
@@ -125,6 +135,11 @@ export default function DashboardPage() {
     
     const userData = JSON.parse(storedUser);
     setUser(userData);
+    
+    // Check if player/trainee needs to enter project name
+    if (userData.role === 'USER' && !userData.projectName) {
+      setShowProjectNameModal(true);
+    }
     
     if (userData.role === 'USER') {
       fetchPlayerDashboard(userData);
@@ -268,6 +283,46 @@ export default function DashboardPage() {
     }
   };
 
+  // Save project name
+  const handleSaveProjectName = async () => {
+    if (!projectNameInput.trim()) {
+      toast.error("Please enter your project name");
+      return;
+    }
+
+    setSavingProjectName(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile/project-name`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ projectName: projectNameInput.trim() }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save project name");
+      }
+
+      const data = await res.json();
+      
+      // Update user in state and localStorage
+      const updatedUser = { ...user, projectName: projectNameInput.trim() };
+      setUser(updatedUser as UserData);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      
+      toast.success("Project name saved successfully!");
+      setShowProjectNameModal(false);
+    } catch (error: any) {
+      console.error("Error saving project name:", error);
+      toast.error(error.message || "Failed to save project name");
+    } finally {
+      setSavingProjectName(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -276,6 +331,50 @@ export default function DashboardPage() {
     );
   }
 
+  // Project Name Modal Component
+  const ProjectNameModal = () => (
+    <Dialog open={showProjectNameModal} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            Welcome! Enter Your Project Name
+          </DialogTitle>
+          <DialogDescription>
+            Please enter your project name to complete your profile. This will be displayed on your dashboard and visible to OC members.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="projectName">Project Name</Label>
+            <Input
+              id="projectName"
+              placeholder="e.g., Project Alpha, Team Phoenix..."
+              value={projectNameInput}
+              onChange={(e) => setProjectNameInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSaveProjectName()}
+              className="h-12"
+              autoFocus
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button 
+            onClick={handleSaveProjectName} 
+            disabled={savingProjectName || !projectNameInput.trim()}
+            className="w-full sm:w-auto"
+          >
+            {savingProjectName ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+            ) : (
+              "Save Project Name"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   // Player Dashboard
   if (user?.role === 'USER') {
     const isTraineeOnly = user.userType === 'food';
@@ -283,6 +382,7 @@ export default function DashboardPage() {
     
     return (
       <ResponsiveLayout>
+        <ProjectNameModal />
         <div className="container mx-auto p-4 lg:p-6">
           {/* Header */}
           <div className="mb-4 lg:mb-6">
@@ -301,7 +401,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-base lg:text-xl">Your Profile</CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div>
                     <p className="text-xs text-muted-foreground lg:text-sm">Trainee ID</p>
                     <p className="text-sm font-medium lg:text-base">{playerInfo.traineeId}</p>
@@ -309,6 +409,21 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-xs text-muted-foreground lg:text-sm">Department</p>
                     <p className="text-sm font-medium lg:text-base">{playerInfo.department}</p>
+                  </div>
+                  {/* Project Name */}
+                  <div>
+                    <p className="text-xs text-muted-foreground lg:text-sm">Project</p>
+                    {user?.projectName ? (
+                      <p className="text-sm font-medium lg:text-base">{user.projectName}</p>
+                    ) : (
+                      <Button 
+                        variant="link" 
+                        className="h-auto p-0 text-sm text-primary underline"
+                        onClick={() => setShowProjectNameModal(true)}
+                      >
+                        Add Project Name
+                      </Button>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground lg:text-sm">{isTraineeOnly ? 'Status' : 'Team'}</p>
