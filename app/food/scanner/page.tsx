@@ -115,11 +115,43 @@ function AdminScanner() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   
   const html5QrRef = useRef<any>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+
+  // Play beep sound using Web Audio API
+  const playBeep = (frequency = 800, duration = 200, type: OscillatorType = 'sine') => {
+    try {
+      // Create audio context if not exists
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      
+      const ctx = audioContextRef.current
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      oscillator.frequency.value = frequency
+      oscillator.type = type
+      
+      gainNode.gain.setValueAtTime(0.5, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000)
+      
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + duration / 1000)
+    } catch (e) {
+      console.log("Audio not supported:", e)
+    }
+  }
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopScanning()
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+      }
     }
   }, [])
 
@@ -176,6 +208,7 @@ function AdminScanner() {
           config,
           async (decodedText: string) => {
             console.log("QR Decoded:", decodedText)
+            playBeep(800, 150) // Beep on scan
             toast.success("QR Code scanned!")
             stopScanning()
             await processQRCode(decodedText)
@@ -192,6 +225,7 @@ function AdminScanner() {
           config,
           async (decodedText: string) => {
             console.log("QR Decoded:", decodedText)
+            playBeep(800, 150) // Beep on scan
             toast.success("QR Code scanned!")
             stopScanning()
             await processQRCode(decodedText)
