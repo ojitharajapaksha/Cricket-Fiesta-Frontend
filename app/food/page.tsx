@@ -32,6 +32,7 @@ interface FoodRegistration {
   foodPreference: string;
   foodCollected: boolean;
   foodCollectedAt: string | null;
+  projectName: string | null;
 }
 
 export default function FoodPage() {
@@ -334,7 +335,7 @@ export default function FoodPage() {
                   )}
                   <TableHead>Name</TableHead>
                   <TableHead>Trainee ID</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Project</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Preference</TableHead>
                   <TableHead>Status</TableHead>
@@ -367,10 +368,10 @@ export default function FoodPage() {
                         <code className="text-xs">{reg.traineeId}</code>
                       </TableCell>
                       <TableCell>
-                        {reg.email ? (
-                          <span className="text-xs text-muted-foreground">{reg.email}</span>
+                        {reg.projectName ? (
+                          <span className="text-sm">{reg.projectName}</span>
                         ) : (
-                          <Badge variant="outline" className="text-xs text-orange-500">No Email</Badge>
+                          <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>{reg.department}</TableCell>
@@ -465,8 +466,8 @@ export default function FoodPage() {
                       <div className="mt-1 text-xs text-muted-foreground">
                         <code>{reg.traineeId}</code> • {reg.department}
                       </div>
-                      {reg.email && (
-                        <div className="mt-0.5 truncate text-[10px] text-muted-foreground">{reg.email}</div>
+                      {reg.projectName && (
+                        <div className="mt-0.5 text-xs text-primary">📁 {reg.projectName}</div>
                       )}
                     </div>
                     <DropdownMenu>
