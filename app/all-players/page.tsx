@@ -22,7 +22,6 @@ interface Player {
   team: {
     id: string
     name: string
-    shortName: string
   } | null
 }
 
@@ -289,7 +288,7 @@ export default function PlayersPublicPage() {
                       </Badge>
                       {player.team && (
                         <Badge className="bg-primary/10 text-primary hover:bg-primary/20 text-xs">
-                          {player.team.shortName}
+                          {player.team.name}
                         </Badge>
                       )}
                     </div>
