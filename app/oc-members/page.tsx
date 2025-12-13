@@ -30,7 +30,7 @@ export default function OCMembersPage() {
           setMembers(data.data)
         }
       } catch (error) {
-        console.error('Failed to fetch OC members:', error)
+        console.error('Failed to fetch Organizing Committee members:', error)
       } finally {
         setLoading(false)
       }
@@ -75,7 +75,7 @@ export default function OCMembersPage() {
               <Link href="/oc-members">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm gap-1.5 bg-accent">
                   <Users className="h-4 w-4" />
-                  OC Members
+                  Organizing Committee Members
                 </Button>
               </Link>
             </nav>
@@ -139,7 +139,7 @@ export default function OCMembersPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
               <Users className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold">No OC Members Yet</h3>
+            <h3 className="mt-4 text-lg font-semibold">No Organizing Committee Members Yet</h3>
             <p className="mt-2 text-sm text-muted-foreground">
               Committee members will appear here once they are approved.
             </p>
