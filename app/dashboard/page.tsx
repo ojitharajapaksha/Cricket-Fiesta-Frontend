@@ -18,6 +18,7 @@ import {
 } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface UserData {
   id: string;
@@ -100,6 +101,7 @@ interface UpcomingMatch {
 const departmentColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f97316", "#ec4899", "#14b8a6", "#eab308", "#06b6d4"];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
@@ -111,19 +113,23 @@ export default function DashboardPage() {
   useEffect(() => {
     // Load user from localStorage
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      
-      if (userData.role === 'USER') {
-        fetchPlayerDashboard(userData);
-      } else {
-        fetchAdminDashboard();
-      }
+    const token = localStorage.getItem('token');
+    
+    // Redirect to login if not authenticated
+    if (!storedUser || !token) {
+      router.push('/login');
+      return;
+    }
+    
+    const userData = JSON.parse(storedUser);
+    setUser(userData);
+    
+    if (userData.role === 'USER') {
+      fetchPlayerDashboard(userData);
     } else {
       fetchAdminDashboard();
     }
-  }, []);
+  }, [router]);
 
   const fetchPlayerDashboard = async (userData: UserData) => {
     try {
