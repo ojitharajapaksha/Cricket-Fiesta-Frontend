@@ -123,3 +123,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Html5 QR Scanner Styles */
+#qr-scanner-container {
+  width: 100% !important;
+  min-height: 380px;
+}
+
+#qr-scanner-container video {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+#qr-scanner-container #qr-shaded-region {
+  border-width: 50px !important;
+}
+
+#qr-scanner-container img[alt="Info icon"] {
+  display: none !important;
+}
+
+#qr-scanner-container a {
+  display: none !important;
+}

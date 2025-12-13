@@ -113,12 +113,7 @@ function AdminScanner() {
   const [manualId, setManualId] = useState("")
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
-  const [lastScanned, setLastScanned] = useState<string>("")
   
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const animationRef = useRef<number | null>(null)
   const html5QrRef = useRef<any>(null)
 
   // Cleanup on unmount
@@ -129,30 +124,15 @@ function AdminScanner() {
   }, [])
 
   const stopScanning = () => {
-    // Stop animation frame
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-      animationRef.current = null
-    }
-    
     // Stop html5-qrcode if active
     if (html5QrRef.current) {
       try {
         html5QrRef.current.stop().catch(() => {})
         html5QrRef.current.clear()
-      } catch (e) {}
+      } catch (e) {
+        console.log("Cleanup error (ignored):", e)
+      }
       html5QrRef.current = null
-    }
-    
-    // Stop camera stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-    
-    // Clear video
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
     }
     
     setScanning(false)
@@ -161,54 +141,68 @@ function AdminScanner() {
   const startScanning = async () => {
     setCameraError(null)
     setScanResult(null)
-    setLastScanned("")
     setScanning(true)
 
     try {
       // Use html5-qrcode library for scanning
       const { Html5Qrcode } = await import('html5-qrcode')
       
-      // Get cameras
-      const cameras = await Html5Qrcode.getCameras()
-      console.log("Cameras found:", cameras)
+      // Create scanner with verbose logging for debugging
+      html5QrRef.current = new Html5Qrcode("qr-scanner-container", { 
+        verbose: true,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        }
+      })
       
-      if (!cameras || cameras.length === 0) {
-        throw new Error("No camera found")
+      // Use facingMode for better mobile support instead of camera ID
+      const config = {
+        fps: 15,
+        qrbox: function(viewfinderWidth: number, viewfinderHeight: number) {
+          // Use 70% of the smaller dimension for scan box
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight)
+          const qrboxSize = Math.floor(minEdge * 0.7)
+          return { width: qrboxSize, height: qrboxSize }
+        },
+        aspectRatio: 1.0,
+        disableFlip: false,
+        formatsToSupport: [0] // 0 = QR_CODE format
       }
-
-      // Find back camera (prefer environment facing)
-      const backCam = cameras.find(c => 
-        c.label.toLowerCase().includes('back') || 
-        c.label.toLowerCase().includes('rear') ||
-        c.label.toLowerCase().includes('environment')
-      )
-      const cameraId = backCam?.id || cameras[cameras.length - 1].id
-
-      // Create scanner
-      html5QrRef.current = new Html5Qrcode("qr-scanner-container", { verbose: false })
       
-      await html5QrRef.current.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-        },
-        async (text: string) => {
-          // Prevent duplicate scans
-          if (text === lastScanned) return
-          setLastScanned(text)
-          
-          console.log("QR Scanned:", text)
-          toast.success("QR Code detected!")
-          
-          // Stop camera and process
-          stopScanning()
-          await processQRCode(text)
-        },
-        () => {} // Ignore scan failures
-      )
+      // Try back camera first, then front camera
+      try {
+        await html5QrRef.current.start(
+          { facingMode: "environment" }, // Back camera
+          config,
+          async (decodedText: string) => {
+            console.log("QR Decoded:", decodedText)
+            toast.success("QR Code scanned!")
+            stopScanning()
+            await processQRCode(decodedText)
+          },
+          (errorMessage: string) => {
+            // Silently ignore - these are just "no QR found" messages
+          }
+        )
+      } catch (backCamError) {
+        console.log("Back camera failed, trying front camera:", backCamError)
+        // Try front camera if back fails
+        await html5QrRef.current.start(
+          { facingMode: "user" }, // Front camera
+          config,
+          async (decodedText: string) => {
+            console.log("QR Decoded:", decodedText)
+            toast.success("QR Code scanned!")
+            stopScanning()
+            await processQRCode(decodedText)
+          },
+          (errorMessage: string) => {
+            // Silently ignore
+          }
+        )
+      }
       
-      toast.success("Camera ready!")
+      toast.success("Camera ready! Point at QR code")
       
     } catch (error: any) {
       console.error("Camera error:", error)
@@ -341,25 +335,26 @@ function AdminScanner() {
           </CardHeader>
           <CardContent className="p-4 pt-2">
             {/* Scanner Container */}
-            <div className="relative mb-4 overflow-hidden rounded-lg bg-black" style={{ minHeight: scanning ? '350px' : '200px' }}>
-              {/* Html5 QR Scanner renders here */}
-              <div id="qr-scanner-container" className={scanning ? 'block' : 'hidden'} style={{ width: '100%' }} />
-              
-              {/* Hidden elements for native approach */}
-              <video ref={videoRef} className="hidden" playsInline muted autoPlay />
-              <canvas ref={canvasRef} className="hidden" />
+            <div className="relative mb-4 overflow-hidden rounded-lg bg-black" style={{ minHeight: '400px' }}>
+              {/* Html5 QR Scanner renders here - MUST have explicit dimensions */}
+              <div 
+                id="qr-scanner-container" 
+                className={scanning ? 'block' : 'hidden'} 
+                style={{ width: '100%', minHeight: '380px' }} 
+              />
               
               {/* Idle State */}
               {!scanning && !cameraError && (
-                <div className="flex h-[200px] flex-col items-center justify-center text-white">
-                  <Camera className="mb-3 h-12 w-12 opacity-50" />
-                  <p className="text-sm">Tap button below to scan</p>
+                <div className="flex h-[400px] flex-col items-center justify-center text-white">
+                  <Camera className="mb-3 h-16 w-16 opacity-50" />
+                  <p className="text-base font-medium">Ready to Scan</p>
+                  <p className="mt-1 text-sm text-gray-400">Tap button below to start camera</p>
                 </div>
               )}
               
               {/* Error State */}
               {cameraError && (
-                <div className="flex h-[200px] flex-col items-center justify-center p-4 text-center text-white">
+                <div className="flex h-[400px] flex-col items-center justify-center p-4 text-center text-white">
                   <CameraOff className="mb-3 h-12 w-12 text-red-400" />
                   <p className="mb-2 text-sm font-medium">Camera Error</p>
                   <p className="mb-3 text-xs text-gray-400">{cameraError}</p>
