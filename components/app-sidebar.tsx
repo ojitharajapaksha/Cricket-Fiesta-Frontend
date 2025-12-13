@@ -16,6 +16,7 @@ interface UserData {
   firstName?: string;
   lastName?: string;
   role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
+  userType?: 'player' | 'committee' | 'food' | 'user';
 }
 
 // Navigation items based on roles
@@ -47,21 +48,26 @@ const navigationByRole = {
   USER: [
     { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
     { name: "Matches", href: "/matches", icon: CalendarDays },
-    { name: "Food Status", href: "/food/scanner", icon: UtensilsCrossed },
     { name: "Teams", href: "/teams", icon: Trophy },
   ],
 };
 
-const roleLabels = {
-  SUPER_ADMIN: 'Super Admin',
-  ADMIN: 'Organizer',
-  USER: 'Player',
+// Get display label based on role and userType
+const getRoleLabel = (user: UserData | null): string => {
+  if (!user) return 'Admin Panel';
+  if (user.role === 'SUPER_ADMIN') return 'Super Admin';
+  if (user.role === 'ADMIN') return 'Organizer';
+  // For USER role, check userType
+  if (user.userType === 'food') return 'Trainee';
+  return 'Player';
 };
 
-const roleBadgeColors = {
-  SUPER_ADMIN: 'bg-red-500 text-white',
-  ADMIN: 'bg-blue-500 text-white',
-  USER: 'bg-green-500 text-white',
+const getRoleBadgeColor = (user: UserData | null): string => {
+  if (!user) return 'bg-gray-500 text-white';
+  if (user.role === 'SUPER_ADMIN') return 'bg-red-500 text-white';
+  if (user.role === 'ADMIN') return 'bg-blue-500 text-white';
+  if (user.userType === 'food') return 'bg-purple-500 text-white';
+  return 'bg-green-500 text-white';
 };
 
 export function AppSidebar() {
@@ -99,7 +105,7 @@ export function AppSidebar() {
         <div>
           <h1 className="text-sm font-bold text-foreground">Cricket Fiesta</h1>
           <p className="text-xs text-muted-foreground">
-            {user ? roleLabels[user.role] : 'Admin Panel'}
+            {getRoleLabel(user)}
           </p>
         </div>
       </div>
@@ -135,8 +141,8 @@ export function AppSidebar() {
             <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
             <p className="truncate text-xs text-muted-foreground">{user?.email || 'admin@slt.com'}</p>
             {user && (
-              <Badge className={cn("mt-1 text-[10px] px-1.5 py-0", roleBadgeColors[user.role])}>
-                {roleLabels[user.role]}
+              <Badge className={cn("mt-1 text-[10px] px-1.5 py-0", getRoleBadgeColor(user))}>
+                {getRoleLabel(user)}
               </Badge>
             )}
           </div>
@@ -188,7 +194,7 @@ function SidebarContent({ user, navigation, pathname, handleLogout, onNavigate }
         <div>
           <h1 className="text-sm font-bold text-foreground">Cricket Fiesta</h1>
           <p className="text-xs text-muted-foreground">
-            {user ? roleLabels[user.role] : 'Admin Panel'}
+            {getRoleLabel(user)}
           </p>
         </div>
       </div>
@@ -224,8 +230,8 @@ function SidebarContent({ user, navigation, pathname, handleLogout, onNavigate }
             <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
             <p className="truncate text-xs text-muted-foreground">{user?.email || 'admin@slt.com'}</p>
             {user && (
-              <Badge className={cn("mt-1 text-[10px] px-1.5 py-0", roleBadgeColors[user.role])}>
-                {roleLabels[user.role]}
+              <Badge className={cn("mt-1 text-[10px] px-1.5 py-0", getRoleBadgeColor(user))}>
+                {getRoleLabel(user)}
               </Badge>
             )}
           </div>

@@ -5,7 +5,7 @@ import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck } from "lucide-react"
+import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck, QrCode } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -18,6 +18,7 @@ import {
 } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import Link from "next/link"
+import QRCode from "qrcode"
 import { useRouter } from "next/navigation"
 
 interface UserData {
@@ -109,6 +110,7 @@ export default function DashboardPage() {
   const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
   const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [qrCodeImage, setQrCodeImage] = useState<string>('');
 
   useEffect(() => {
     // Load user from localStorage
@@ -130,6 +132,27 @@ export default function DashboardPage() {
       fetchAdminDashboard();
     }
   }, [router]);
+
+  // Generate QR code when playerInfo is loaded
+  useEffect(() => {
+    if (playerInfo?.traineeId && playerInfo?.foodRegistration && !playerInfo.foodRegistration.foodCollected) {
+      // Generate QR code with trainee ID for food collection
+      QRCode.toDataURL(playerInfo.traineeId, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      })
+      .then(url => {
+        setQrCodeImage(url);
+      })
+      .catch(err => {
+        console.error('Error generating QR code:', err);
+      });
+    }
+  }, [playerInfo]);
 
   const fetchPlayerDashboard = async (userData: UserData) => {
     try {
@@ -158,6 +181,7 @@ export default function DashboardPage() {
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/matches?status=SCHEDULED&limit=5`, { headers }),
       ]);
 
+      let foundPlayer = false;
       if (playerRes.ok) {
         const playerData = await playerRes.json();
         const players = playerData.data || [];
@@ -165,6 +189,37 @@ export default function DashboardPage() {
         const myPlayer = players.find((p: any) => p.email?.toLowerCase() === userData.email.toLowerCase());
         if (myPlayer) {
           setPlayerInfo(myPlayer);
+          foundPlayer = true;
+        }
+      }
+
+      // If no player found but user is food-only, fetch food registration separately
+      if (!foundPlayer && userData.userType === 'food') {
+        try {
+          const foodRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/food/registrations?email=${encodeURIComponent(userData.email)}`, { headers });
+          if (foodRes.ok) {
+            const foodData = await foodRes.json();
+            const foodRegs = foodData.data || [];
+            const myFood = foodRegs.find((f: any) => f.email?.toLowerCase() === userData.email.toLowerCase());
+            if (myFood) {
+              setPlayerInfo({
+                id: myFood.id,
+                traineeId: myFood.traineeId,
+                fullName: myFood.fullName,
+                email: myFood.email || userData.email,
+                department: myFood.department,
+                team: undefined,
+                foodRegistration: {
+                  id: myFood.id,
+                  foodPreference: myFood.foodPreference,
+                  foodCollected: myFood.foodCollected,
+                  foodCollectedAt: myFood.foodCollectedAt,
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching food registration:', e);
         }
       }
 
@@ -223,13 +278,16 @@ export default function DashboardPage() {
 
   // Player Dashboard
   if (user?.role === 'USER') {
+    const isTraineeOnly = user.userType === 'food';
+    const displayName = playerInfo?.fullName || user.firstName || (isTraineeOnly ? 'Trainee' : 'Player');
+    
     return (
       <ResponsiveLayout>
         <div className="container mx-auto p-4 lg:p-6">
           {/* Header */}
           <div className="mb-4 lg:mb-6">
             <h1 className="mb-1 text-2xl font-bold text-foreground lg:mb-2 lg:text-3xl">
-              Welcome, {playerInfo?.fullName || user.firstName || 'Player'}!
+              Welcome, {displayName}!
             </h1>
             <p className="text-sm text-muted-foreground lg:text-base">
               Cricket Fiesta 2026 - Your event dashboard
@@ -253,8 +311,10 @@ export default function DashboardPage() {
                     <p className="text-sm font-medium lg:text-base">{playerInfo.department}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground lg:text-sm">Team</p>
-                    {playerInfo.team ? (
+                    <p className="text-xs text-muted-foreground lg:text-sm">{isTraineeOnly ? 'Status' : 'Team'}</p>
+                    {isTraineeOnly ? (
+                      <Badge className="mt-1 bg-purple-500 text-white text-xs">Trainee</Badge>
+                    ) : playerInfo.team ? (
                       <Badge 
                         className="mt-1 text-xs"
                         style={{ backgroundColor: playerInfo.team.color, color: '#fff' }}
@@ -314,6 +374,26 @@ export default function DashboardPage() {
                       {playerInfo.foodRegistration.foodPreference === 'VEGETARIAN' ? 'Vegetarian' : 'Non-Vegetarian'}
                     </p>
                   </div>
+                  
+                  {/* QR Code for food collection */}
+                  {!playerInfo.foodRegistration.foodCollected && qrCodeImage && (
+                    <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-primary/50 bg-primary/5 p-4">
+                      <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+                        <QrCode className="h-4 w-4" />
+                        Your Food Collection QR Code
+                      </div>
+                      <div className="rounded-lg bg-white p-2">
+                        <img 
+                          src={qrCodeImage} 
+                          alt="Food Collection QR Code" 
+                          className="h-40 w-40"
+                        />
+                      </div>
+                      <p className="mt-2 text-center text-xs text-muted-foreground">
+                        Show this QR code at the food counter to collect your meal
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-3 text-muted-foreground">

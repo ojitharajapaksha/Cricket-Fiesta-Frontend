@@ -32,11 +32,30 @@ interface Admin {
   firstName: string;
   lastName: string;
   traineeId: string;
+  role: 'ADMIN' | 'USER' | 'SUPER_ADMIN';
+  userType?: 'PLAYER' | 'TRAINEE' | 'COMMITTEE';
   approvalStatus: string;
   approvedBy?: string;
   approvedAt?: string;
   createdAt: string;
 }
+
+// Helper function to get role display label
+const getRoleDisplayLabel = (admin: Admin): string => {
+  if (admin.role === 'ADMIN') return 'OC Member';
+  if (admin.role === 'SUPER_ADMIN') return 'Super Admin';
+  // For USER role, check userType
+  if (admin.userType === 'TRAINEE') return 'Trainee';
+  return 'Player';
+};
+
+// Helper function to get role badge color
+const getRoleBadgeColor = (admin: Admin): string => {
+  if (admin.role === 'ADMIN') return 'bg-blue-500 text-white';
+  if (admin.role === 'SUPER_ADMIN') return 'bg-red-500 text-white';
+  if (admin.userType === 'TRAINEE') return 'bg-purple-500 text-white';
+  return 'bg-green-500 text-white';
+};
 
 interface ApprovalHistoryItem {
   id: string;
@@ -206,9 +225,9 @@ function AdminApprovalsContent() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Admin Approvals</h1>
+        <h1 className="text-3xl font-bold">User Approvals</h1>
         <p className="text-muted-foreground mt-2">
-          Manage organizing committee member access and view approval history
+          Manage access for Players and OC Members, and view approval history
         </p>
       </div>
 
@@ -226,7 +245,7 @@ function AdminApprovalsContent() {
           </TabsTrigger>
           <TabsTrigger value="all" className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" />
-            All Admins ({allAdmins.length})
+            All Users ({allAdmins.length})
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
@@ -240,7 +259,7 @@ function AdminApprovalsContent() {
             <CardHeader>
               <CardTitle>Pending Approvals</CardTitle>
               <CardDescription>
-                {pendingAdmins.length} organizing committee member{pendingAdmins.length !== 1 ? 's' : ''} awaiting approval
+                {pendingAdmins.length} user{pendingAdmins.length !== 1 ? 's' : ''} awaiting approval (Players & OC Members)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -256,6 +275,7 @@ function AdminApprovalsContent() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Trainee ID</TableHead>
+                      <TableHead>Role</TableHead>
                       <TableHead>Requested</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -269,7 +289,12 @@ function AdminApprovalsContent() {
                         </TableCell>
                         <TableCell>{admin.email}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{admin.traineeId}</Badge>
+                          <Badge variant="outline">{admin.traineeId || '-'}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={admin.role === 'ADMIN' ? 'default' : 'secondary'}>
+                            {admin.role === 'ADMIN' ? 'OC Member' : admin.role === 'USER' ? 'Player' : admin.role}
+                          </Badge>
                         </TableCell>
                         <TableCell>{formatDate(admin.createdAt)}</TableCell>
                         <TableCell>{getStatusBadge(admin.approvalStatus)}</TableCell>
@@ -312,16 +337,16 @@ function AdminApprovalsContent() {
         <TabsContent value="all">
           <Card>
             <CardHeader>
-              <CardTitle>All Admin Accounts</CardTitle>
+              <CardTitle>All User Accounts</CardTitle>
               <CardDescription>
-                Manage all organizing committee member accounts
+                Manage all Players and OC Member accounts
               </CardDescription>
             </CardHeader>
             <CardContent>
               {allAdmins.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <ShieldAlert className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No admin accounts found</p>
+                  <p>No user accounts found</p>
                 </div>
               ) : (
                 <Table>
@@ -330,6 +355,7 @@ function AdminApprovalsContent() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Trainee ID</TableHead>
+                      <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Last Action</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -343,7 +369,12 @@ function AdminApprovalsContent() {
                         </TableCell>
                         <TableCell>{admin.email}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{admin.traineeId}</Badge>
+                          <Badge variant="outline">{admin.traineeId || '-'}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={admin.role === 'ADMIN' ? 'default' : 'secondary'}>
+                            {admin.role === 'ADMIN' ? 'OC Member' : admin.role === 'USER' ? 'Player' : admin.role}
+                          </Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(admin.approvalStatus)}</TableCell>
                         <TableCell>
