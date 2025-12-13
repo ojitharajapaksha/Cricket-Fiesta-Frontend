@@ -360,6 +360,58 @@ function AdminScanner() {
           <p className="text-sm text-muted-foreground">Scan QR codes for meal distribution</p>
         </div>
 
+        {/* Result - Shows at TOP when available */}
+        {scanResult && (
+          <Card className={`mb-4 border-2 animate-in fade-in slide-in-from-top-2 duration-300 ${scanResult.success ? (scanResult.alreadyCollected ? 'border-yellow-500 bg-yellow-50' : 'border-green-500 bg-green-50') : 'border-red-500 bg-red-50'}`}>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                {scanResult.success ? (
+                  <CheckCircle2 className={`h-6 w-6 ${scanResult.alreadyCollected ? 'text-yellow-500' : 'text-green-500'}`} />
+                ) : (
+                  <XCircle className="h-6 w-6 text-red-500" />
+                )}
+                {scanResult.success ? (scanResult.alreadyCollected ? "Already Collected" : "✓ Trainee Found") : "Not Found"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              {scanResult.success ? (
+                <div className="space-y-3">
+                  <div className="rounded-lg bg-white/80 p-3 shadow-sm">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div><span className="text-muted-foreground">Name:</span><p className="text-lg font-bold">{scanResult.name}</p></div>
+                      <div><span className="text-muted-foreground">ID:</span><p className="text-lg font-bold">{scanResult.traineeId}</p></div>
+                      <div className="col-span-2"><span className="text-muted-foreground">Preference:</span><p className="text-lg font-bold">{scanResult.preference}</p></div>
+                    </div>
+                  </div>
+                  
+                  <div className={`rounded-lg p-3 text-center text-sm font-medium ${scanResult.alreadyCollected ? 'bg-yellow-200 text-yellow-900' : 'bg-green-200 text-green-900'}`}>
+                    {scanResult.message}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {!scanResult.alreadyCollected && (
+                      <Button onClick={handleConfirm} className="h-14 flex-1 bg-green-600 text-lg font-bold hover:bg-green-700">
+                        ✓ Confirm Collection
+                      </Button>
+                    )}
+                    <Button variant="outline" onClick={() => { setScanResult(null); setManualId(""); startScanning(); }} className={`h-14 text-base ${scanResult.alreadyCollected ? 'w-full' : 'flex-1'}`}>
+                      {scanResult.alreadyCollected ? "Scan Next" : "Cancel"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-red-600">ID: {scanResult.traineeId}</p>
+                  <p className="text-sm">{scanResult.message}</p>
+                  <Button variant="outline" onClick={() => { setScanResult(null); startScanning(); }} className="h-12 w-full">
+                    Try Again
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Scanner */}
         <Card className="mb-4">
           <CardHeader className="p-4 pb-2">
@@ -436,58 +488,6 @@ function AdminScanner() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Result */}
-        {scanResult && (
-          <Card className={`mb-4 border-2 ${scanResult.success ? (scanResult.alreadyCollected ? 'border-yellow-500' : 'border-green-500') : 'border-red-500'}`}>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                {scanResult.success ? (
-                  <CheckCircle2 className={`h-5 w-5 ${scanResult.alreadyCollected ? 'text-yellow-500' : 'text-green-500'}`} />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-500" />
-                )}
-                {scanResult.success ? (scanResult.alreadyCollected ? "Already Collected" : "Found") : "Not Found"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              {scanResult.success ? (
-                <div className="space-y-3">
-                  <div className="rounded-lg bg-muted p-3">
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div><span className="text-muted-foreground">Name:</span><p className="font-semibold">{scanResult.name}</p></div>
-                      <div><span className="text-muted-foreground">ID:</span><p className="font-semibold">{scanResult.traineeId}</p></div>
-                      <div className="col-span-2"><span className="text-muted-foreground">Preference:</span><p className="font-semibold">{scanResult.preference}</p></div>
-                    </div>
-                  </div>
-                  
-                  <div className={`rounded-lg p-3 text-sm ${scanResult.alreadyCollected ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                    {scanResult.message}
-                  </div>
-
-                  <div className="flex gap-2">
-                    {!scanResult.alreadyCollected && (
-                      <Button onClick={handleConfirm} className="h-12 flex-1 bg-green-600 text-base hover:bg-green-700">
-                        ✓ Confirm Collection
-                      </Button>
-                    )}
-                    <Button variant="outline" onClick={() => { setScanResult(null); setManualId(""); }} className={`h-12 text-base ${scanResult.alreadyCollected ? 'w-full' : 'flex-1'}`}>
-                      {scanResult.alreadyCollected ? "Scan Next" : "Cancel"}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-red-600">ID: {scanResult.traineeId}</p>
-                  <p className="text-sm">{scanResult.message}</p>
-                  <Button variant="outline" onClick={() => setScanResult(null)} className="h-12 w-full">
-                    Try Again
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Tips */}
         <Card>
