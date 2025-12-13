@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Users, Trophy, TrendingUp, Loader2, Shuffle } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
@@ -33,26 +34,33 @@ interface Team {
 }
 
 export default function TeamsPage() {
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, isSuperAdmin, isOC, token } = useAuth('ADMIN_OR_SUPER')
+  
   const [teams, setTeams] = useState<Team[]>([])
   const [totalRegisteredPlayers, setTotalRegisteredPlayers] = useState(0)
   const [loading, setLoading] = useState(true)
   const [autoAssigning, setAutoAssigning] = useState(false)
-  const [user, setUser] = useState<UserData | null>(null)
 
   useEffect(() => {
-    // Load user from localStorage
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    if (isAuthenticated && token) {
+      fetchTeams()
+      fetchPlayerCount()
     }
-    fetchTeams()
-    fetchPlayerCount()
-  }, [])
+  }, [isAuthenticated, token])
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   const fetchTeams = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
       const response = await fetch(`${API_URL}/api/teams`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -72,7 +80,6 @@ export default function TeamsPage() {
 
   const fetchPlayerCount = async () => {
     try {
-      const token = localStorage.getItem("token")
       const response = await fetch(`${API_URL}/api/players`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -95,7 +102,6 @@ export default function TeamsPage() {
     
     setAutoAssigning(true)
     try {
-      const token = localStorage.getItem("token")
       const response = await fetch(`${API_URL}/api/teams/auto-assign`, {
         method: "POST",
         headers: {
@@ -140,14 +146,14 @@ export default function TeamsPage() {
         <div className="mb-4 flex flex-col gap-3 lg:mb-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">
-              {user?.role === 'USER' ? 'Teams' : 'Team Management'}
+              {(isSuperAdmin || isOC) ? 'Team Management' : 'Teams'}
             </h1>
             <p className="text-xs text-muted-foreground lg:text-base">
-              {user?.role === 'USER' ? 'View all cricket teams' : 'Manage cricket teams and player assignments'}
+              {(isSuperAdmin || isOC) ? 'Manage cricket teams and player assignments' : 'View all cricket teams'}
             </p>
           </div>
           {/* Only show admin buttons for non-USER roles */}
-          {user?.role !== 'USER' && (
+          {(isSuperAdmin || isOC) && (
             <div className="flex flex-wrap gap-2">
               <Button 
                 variant="outline" 

@@ -13,11 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Trophy, Loader2, User, ShieldCheck, Clock, CheckCircle2 } from "lucide-react"
 import { auth, googleProvider, signInWithPopup, signOut } from "@/lib/firebase"
+import { usePublicRoute } from "@/hooks/use-auth"
 
 type LoginStatus = 'idle' | 'loading' | 'pending' | 'success' | 'error';
 
 export default function LoginPage() {
   const router = useRouter()
+  // Check if already logged in - redirect to dashboard if so
+  const { loading: authLoading, isAuthenticated } = usePublicRoute()
+  
   const [adminEmail, setAdminEmail] = useState("")
   const [adminPassword, setAdminPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -29,14 +33,14 @@ export default function LoginPage() {
   const [pendingEmail, setPendingEmail] = useState("")
   const [pendingName, setPendingName] = useState("")
 
-  // Check if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    const user = localStorage.getItem('user')
-    if (token && user) {
-      router.push('/dashboard')
-    }
-  }, [router])
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   // Google Sign-In
   const handleGoogleSignIn = async () => {

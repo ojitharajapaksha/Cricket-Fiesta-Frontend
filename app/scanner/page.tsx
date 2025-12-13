@@ -4,10 +4,23 @@ import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { QrCode, UtensilsCrossed, Users } from "lucide-react"
+import { QrCode, UtensilsCrossed, Users, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function ScannerPage() {
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, token, isSuperAdmin, isOC } = useAuth('ADMIN_OR_SUPER')
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <ResponsiveLayout>
       <div className="container mx-auto max-w-4xl p-4 lg:p-6">

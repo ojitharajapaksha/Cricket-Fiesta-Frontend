@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
@@ -12,22 +12,12 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Save, ShieldAlert, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function NewCommitteeMemberPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [authorized, setAuthorized] = useState(false)
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      if (userData.role === 'SUPER_ADMIN') {
-        setAuthorized(true)
-      }
-    }
-    setLoading(false)
-  }, [])
+  // Auth check - only Super Admin can create committee members
+  const { loading: authLoading, isSuperAdmin, token } = useAuth('SUPER_ADMIN')
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -54,7 +44,8 @@ export default function NewCommitteeMemberPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  if (loading) {
+  // Show loading while checking authentication
+  if (authLoading) {
     return (
       <ResponsiveLayout>
         <div className="flex h-[80vh] items-center justify-center">
@@ -64,7 +55,8 @@ export default function NewCommitteeMemberPage() {
     )
   }
 
-  if (!authorized) {
+  // Only Super Admin is allowed
+  if (!isSuperAdmin) {
     return (
       <ResponsiveLayout>
         <div className="container mx-auto max-w-lg p-4 lg:p-6">

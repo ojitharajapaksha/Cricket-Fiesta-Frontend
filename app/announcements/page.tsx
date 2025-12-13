@@ -30,6 +30,7 @@ import {
   Loader2
 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/hooks/use-auth"
 
 interface Announcement {
   id: string
@@ -84,6 +85,9 @@ const emptyForm: FormData = {
 
 export default function AnnouncementsPage() {
   const router = useRouter()
+  // Auth check - only Super Admin can manage announcements
+  const { loading: authLoading, isSuperAdmin, token } = useAuth('SUPER_ADMIN')
+  
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -93,27 +97,15 @@ export default function AnnouncementsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [authorized, setAuthorized] = useState(false)
 
   useEffect(() => {
-    // Check if user is Super Admin
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      const user = JSON.parse(userData)
-      if (user.role === 'SUPER_ADMIN') {
-        setAuthorized(true)
-        fetchAnnouncements()
-      } else {
-        router.push('/dashboard')
-      }
-    } else {
-      router.push('/login')
+    if (isSuperAdmin && token) {
+      fetchAnnouncements()
     }
-  }, [router])
+  }, [isSuperAdmin, token])
 
   const fetchAnnouncements = async () => {
     try {
-      const token = localStorage.getItem('token')
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/announcements`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -136,7 +128,6 @@ export default function AnnouncementsPage() {
     setSuccess('')
 
     try {
-      const token = localStorage.getItem('token')
       const url = editingId 
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/announcements/${editingId}`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/announcements`
@@ -192,7 +183,6 @@ export default function AnnouncementsPage() {
 
   const handleToggleActive = async (id: string) => {
     try {
-      const token = localStorage.getItem('token')
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/announcements/${id}/toggle`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
@@ -209,7 +199,6 @@ export default function AnnouncementsPage() {
     if (!deleteId) return
     
     try {
-      const token = localStorage.getItem('token')
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/announcements/${deleteId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
@@ -230,7 +219,8 @@ export default function AnnouncementsPage() {
     setIsDialogOpen(true)
   }
 
-  if (!authorized) {
+  // Show loading while checking authentication
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

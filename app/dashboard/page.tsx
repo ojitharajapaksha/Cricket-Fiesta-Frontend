@@ -24,6 +24,7 @@ import Link from "next/link"
 import QRCode from "qrcode"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
 interface UserData {
   id: string;
@@ -108,7 +109,9 @@ const departmentColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f97316", "#ec4899",
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserData | null>(null);
+  // Auth check - redirects to login if not authenticated (allows any role)
+  const { loading: authLoading, isAuthenticated, user, token, isSuperAdmin, isOC } = useAuth();
+  
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
   const [foodData, setFoodData] = useState<FoodPreference[]>([]);
@@ -123,30 +126,19 @@ export default function DashboardPage() {
   const [savingProjectName, setSavingProjectName] = useState(false);
 
   useEffect(() => {
-    // Load user from localStorage
-    const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    // Redirect to login if not authenticated
-    if (!storedUser || !token) {
-      router.push('/login');
-      return;
-    }
-    
-    const userData = JSON.parse(storedUser);
-    setUser(userData);
+    if (!isAuthenticated || !token || !user) return;
     
     // Check if player/trainee needs to enter project name
-    if (userData.role === 'USER' && !userData.projectName) {
+    if (user.role === 'USER' && !user.projectName) {
       setShowProjectNameModal(true);
     }
     
-    if (userData.role === 'USER') {
-      fetchPlayerDashboard(userData);
+    if (user.role === 'USER') {
+      fetchPlayerDashboard(user as UserData);
     } else {
       fetchAdminDashboard();
     }
-  }, [router]);
+  }, [isAuthenticated, token, user]);
 
   // Generate QR code when playerInfo is loaded
   useEffect(() => {
@@ -171,7 +163,6 @@ export default function DashboardPage() {
 
   const fetchPlayerDashboard = async (userData: UserData) => {
     try {
-      const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
       // Auto check-in if user is a committee member
@@ -251,7 +242,6 @@ export default function DashboardPage() {
 
   const fetchAdminDashboard = async () => {
     try {
-      const token = localStorage.getItem("token");
       const headers = {
         Authorization: `Bearer ${token}`,
       };
@@ -292,7 +282,6 @@ export default function DashboardPage() {
 
     setSavingProjectName(true);
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile/project-name`, {
         method: "PUT",
         headers: {
@@ -308,13 +297,14 @@ export default function DashboardPage() {
 
       const data = await res.json();
       
-      // Update user in state and localStorage
+      // Update user in localStorage only (hook will re-read on next render)
       const updatedUser = { ...user, projectName: projectNameInput.trim() };
-      setUser(updatedUser as UserData);
       localStorage.setItem("user", JSON.stringify(updatedUser));
       
       toast.success("Project name saved successfully!");
       setShowProjectNameModal(false);
+      // Reload page to refresh user data from hook
+      window.location.reload();
     } catch (error: any) {
       console.error("Error saving project name:", error);
       toast.error(error.message || "Failed to save project name");
@@ -322,6 +312,15 @@ export default function DashboardPage() {
       setSavingProjectName(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

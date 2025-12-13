@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, UserCheck, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
 interface Player {
   id: string;
@@ -33,26 +34,23 @@ interface Player {
 }
 
 export default function PlayersPage() {
+  // Auth check - redirects to login if not authenticated, requires ADMIN or SUPER_ADMIN
+  const { loading: authLoading, isAuthenticated, isSuperAdmin, token } = useAuth('ADMIN_OR_SUPER')
+  
   const [searchQuery, setSearchQuery] = useState("")
   const [players, setPlayers] = useState<Player[]>([])
   const [teamCount, setTeamCount] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
-    // Check if user is Super Admin
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      setIsSuperAdmin(userData.role === 'SUPER_ADMIN')
+    if (isAuthenticated && token) {
+      fetchPlayers()
+      fetchTeamCount()
     }
-    fetchPlayers()
-    fetchTeamCount()
-  }, [])
+  }, [isAuthenticated, token])
 
   const fetchPlayers = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/players`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -73,7 +71,6 @@ export default function PlayersPage() {
 
   const fetchTeamCount = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -91,7 +88,6 @@ export default function PlayersPage() {
 
   const handleMarkAttendance = async (playerId: string) => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/players/${playerId}/attendance`, {
         method: "POST",
         headers: {
@@ -107,6 +103,15 @@ export default function PlayersPage() {
       console.error("Error marking attendance:", error);
       toast.error(error.message || "Failed to mark attendance");
     }
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   const filteredPlayers = players.filter(

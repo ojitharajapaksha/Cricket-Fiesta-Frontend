@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, ScanLine, Loader2, Mail, Send } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,9 @@ interface FoodRegistration {
 }
 
 export default function FoodPage() {
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, isSuperAdmin, token } = useAuth('ADMIN_OR_SUPER')
+  
   const [searchQuery, setSearchQuery] = useState("")
   const [registrations, setRegistrations] = useState<FoodRegistration[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,22 +48,24 @@ export default function FoodPage() {
   const [showBulkEmailDialog, setShowBulkEmailDialog] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
-    // Check if user is Super Admin
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      setIsSuperAdmin(userData.role === 'SUPER_ADMIN')
+    if (isAuthenticated && token) {
+      fetchRegistrations()
     }
-    fetchRegistrations()
-  }, [])
+  }, [isAuthenticated, token])
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   const fetchRegistrations = async () => {
     try {
-      const token = localStorage.getItem("token");
-      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/food/registrations`, {
         headers: {
           Authorization: `Bearer ${token}`,

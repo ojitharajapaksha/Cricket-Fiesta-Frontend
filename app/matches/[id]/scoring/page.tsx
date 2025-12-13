@@ -5,10 +5,14 @@ import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function LiveScoringPage() {
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, token, isSuperAdmin, isOC } = useAuth('ADMIN_OR_SUPER')
+  
   const [homeScore, setHomeScore] = useState({ runs: 0, wickets: 0, overs: 0, balls: 0 })
   const [awayScore, setAwayScore] = useState({ runs: 0, wickets: 0, overs: 0, balls: 0 })
   const [currentInning, setCurrentInning] = useState<"home" | "away">("home")
@@ -37,6 +41,15 @@ export default function LiveScoringPage() {
       ...prev,
       wickets: Math.min(prev.wickets + 1, 10),
     }))
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (

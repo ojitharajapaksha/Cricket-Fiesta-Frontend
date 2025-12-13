@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Calendar, Play, CheckCircle, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
@@ -24,18 +25,22 @@ interface Match {
 }
 
 export default function MatchesPage() {
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, isSuperAdmin, isOC, token } = useAuth('ADMIN_OR_SUPER')
+  
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState("All")
 
   useEffect(() => {
-    fetchMatches()
-  }, [])
+    if (isAuthenticated && token) {
+      fetchMatches()
+    }
+  }, [isAuthenticated, token])
 
   const fetchMatches = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
       const response = await fetch(`${API_URL}/api/matches`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,6 +65,15 @@ export default function MatchesPage() {
     completed: matches.filter((m) => m.status === "COMPLETED").length,
     live: matches.filter((m) => m.status === "LIVE").length,
     scheduled: matches.filter((m) => m.status === "SCHEDULED").length,
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   if (loading) {

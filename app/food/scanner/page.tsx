@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { ArrowLeft, Search, CheckCircle2, XCircle, Loader2, Clock, UtensilsCrossed, Camera, CameraOff, RefreshCw, Scan } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
@@ -526,16 +527,11 @@ function AdminScanner() {
 
 // Main Component
 export default function ScannerPage() {
-  const [user, setUser] = useState<UserData | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, user, token, isSuperAdmin, isOC } = useAuth()
 
-  useEffect(() => {
-    const stored = localStorage.getItem('user')
-    if (stored) setUser(JSON.parse(stored))
-    setLoading(false)
-  }, [])
-
-  if (loading) {
+  // Show loading while checking authentication
+  if (authLoading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
   }
 

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Trophy, Award, Plus, Download, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
@@ -23,17 +24,21 @@ interface Award {
 }
 
 export default function AwardsPage() {
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, token, isSuperAdmin, isOC } = useAuth('ADMIN_OR_SUPER')
+  
   const [awards, setAwards] = useState<Award[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchAwards()
-  }, [])
+    if (isAuthenticated && token) {
+      fetchAwards()
+    }
+  }, [isAuthenticated, token])
 
   const fetchAwards = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
       const response = await fetch(`${API_URL}/api/awards`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -49,6 +54,15 @@ export default function AwardsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   if (loading) {

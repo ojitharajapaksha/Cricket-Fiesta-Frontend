@@ -10,11 +10,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Save, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function NewMatchPage() {
   const router = useRouter()
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, token } = useAuth('ADMIN_OR_SUPER')
+  
   const [formData, setFormData] = useState({
     matchType: "",
     homeTeam: "",
@@ -25,6 +29,15 @@ export default function NewMatchPage() {
     umpire2: "",
     scorer: "",
   })
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

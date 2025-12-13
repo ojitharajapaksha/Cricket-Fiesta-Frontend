@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Edit, UserPlus, Trophy, Users, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
@@ -47,6 +48,8 @@ interface Team {
 export default function TeamDetailPage() {
   const params = useParams()
   const teamId = params.id as string
+  // Auth check - redirects to login if not authenticated
+  const { loading: authLoading, isAuthenticated, token, isSuperAdmin, isOC } = useAuth('ADMIN_OR_SUPER')
 
   const [team, setTeam] = useState<Team | null>(null)
   const [matches, setMatches] = useState<Match[]>([])
@@ -54,16 +57,15 @@ export default function TeamDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (teamId) {
+    if (teamId && isAuthenticated && token) {
       fetchTeamData()
     }
-  }, [teamId])
+  }, [teamId, isAuthenticated, token])
 
   const fetchTeamData = async () => {
     setLoading(true)
     setError(null)
     try {
-      const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
       // Fetch team with players
@@ -136,6 +138,15 @@ export default function TeamDetailPage() {
   // Format experience level
   const formatExperience = (level: string) => {
     return level.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   if (loading) {
