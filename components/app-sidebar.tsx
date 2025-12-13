@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Trophy, Users, UtensilsCrossed, CalendarDays, BarChart3, Award, Settings, LogOut, QrCode, ShieldCheck, User, DollarSign, Menu, X } from "lucide-react"
+import { Trophy, Users, UtensilsCrossed, CalendarDays, BarChart3, Award, Settings, LogOut, QrCode, ShieldCheck, User, DollarSign, Menu, X, Megaphone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -23,6 +23,7 @@ const navigationByRole = {
   SUPER_ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
     { name: "Admin Approvals", href: "/admin/approvals", icon: ShieldCheck },
+    { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "Players", href: "/players", icon: Users },
     { name: "Food Distribution", href: "/food", icon: UtensilsCrossed },
     { name: "Committee", href: "/committee", icon: Users },

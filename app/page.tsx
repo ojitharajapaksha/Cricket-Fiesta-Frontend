@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Trophy, Users, UtensilsCrossed, CalendarDays, Award, BarChart3, Home } from "lucide-react"
 import { CountdownTimer } from "@/components/countdown-timer"
 import { StatsSection } from "@/components/stats-section"
+import { AnnouncementPopup } from "@/components/announcement-popup"
 
 // Event starts on January 10th, 2026 at 9:00 AM Sri Lanka Time (UTC+5:30)
 const EVENT_DATE = new Date("2026-01-10T09:00:00+05:30")
@@ -11,6 +12,9 @@ const EVENT_DATE = new Date("2026-01-10T09:00:00+05:30")
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
+      {/* Announcement Popup */}
+      <AnnouncementPopup />
+      
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-3 py-3 lg:px-4 lg:py-4">
