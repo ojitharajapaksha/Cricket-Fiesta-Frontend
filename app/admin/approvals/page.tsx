@@ -227,7 +227,7 @@ function AdminApprovalsContent() {
       <div>
         <h1 className="text-3xl font-bold">User Approvals</h1>
         <p className="text-muted-foreground mt-2">
-          Manage access for Players and OC Members, and view approval history
+          Manage access for Players, Trainees, and OC Members, and view approval history
         </p>
       </div>
 
@@ -259,7 +259,7 @@ function AdminApprovalsContent() {
             <CardHeader>
               <CardTitle>Pending Approvals</CardTitle>
               <CardDescription>
-                {pendingAdmins.length} user{pendingAdmins.length !== 1 ? 's' : ''} awaiting approval (Players & OC Members)
+                {pendingAdmins.length} user{pendingAdmins.length !== 1 ? 's' : ''} awaiting approval (Players, Trainees & OC Members)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -292,8 +292,8 @@ function AdminApprovalsContent() {
                           <Badge variant="outline">{admin.traineeId || '-'}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={admin.role === 'ADMIN' ? 'default' : 'secondary'}>
-                            {admin.role === 'ADMIN' ? 'OC Member' : admin.role === 'USER' ? 'Player' : admin.role}
+                          <Badge className={getRoleBadgeColor(admin)}>
+                            {getRoleDisplayLabel(admin)}
                           </Badge>
                         </TableCell>
                         <TableCell>{formatDate(admin.createdAt)}</TableCell>
@@ -339,7 +339,7 @@ function AdminApprovalsContent() {
             <CardHeader>
               <CardTitle>All User Accounts</CardTitle>
               <CardDescription>
-                Manage all Players and OC Member accounts
+                Manage all Players, Trainees, and OC Member accounts
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -372,8 +372,8 @@ function AdminApprovalsContent() {
                           <Badge variant="outline">{admin.traineeId || '-'}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={admin.role === 'ADMIN' ? 'default' : 'secondary'}>
-                            {admin.role === 'ADMIN' ? 'OC Member' : admin.role === 'USER' ? 'Player' : admin.role}
+                          <Badge className={getRoleBadgeColor(admin)}>
+                            {getRoleDisplayLabel(admin)}
                           </Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(admin.approvalStatus)}</TableCell>
