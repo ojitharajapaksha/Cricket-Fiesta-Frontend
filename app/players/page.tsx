@@ -36,8 +36,15 @@ export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([])
   const [teamCount, setTeamCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
+    // Check if user is Super Admin
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      const userData = JSON.parse(storedUser)
+      setIsSuperAdmin(userData.role === 'SUPER_ADMIN')
+    }
     fetchPlayers()
     fetchTeamCount()
   }, [])
@@ -109,7 +116,7 @@ export default function PlayersPage() {
   )
 
   const attendedCount = players.filter((p) => p.attended).length
-  const unassignedCount = players.filter((p) => !p.teamId).length
+  const unassignedCount = players.filter((p) => !p.teamId && !p.team).length
 
   if (loading) {
     return (
@@ -129,24 +136,28 @@ export default function PlayersPage() {
             <p className="text-xs text-muted-foreground lg:text-base">Manage player registrations, teams, and attendance</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/players/bulk-import">
-              <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
-                <Upload className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Bulk Import</span>
-                <span className="sm:hidden">Import</span>
-              </Button>
-            </Link>
+            {isSuperAdmin && (
+              <Link href="/players/bulk-import">
+                <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
+                  <Upload className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Bulk Import</span>
+                  <span className="sm:hidden">Import</span>
+                </Button>
+              </Link>
+            )}
             <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
               <Download className="h-3 w-3 lg:h-4 lg:w-4" />
               Export
             </Button>
-            <Link href="/players/new">
-              <Button className="gap-2 text-xs lg:text-sm" size="sm">
-                <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Add Player</span>
-                <span className="sm:hidden">Add</span>
-              </Button>
-            </Link>
+            {isSuperAdmin && (
+              <Link href="/players/new">
+                <Button className="gap-2 text-xs lg:text-sm" size="sm">
+                  <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Add Player</span>
+                  <span className="sm:hidden">Add</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -238,7 +249,7 @@ export default function PlayersPage() {
                       </TableCell>
                       <TableCell>{player.experienceLevel}</TableCell>
                       <TableCell>
-                        {player.team ? (
+                        {player.team && player.team.shortName ? (
                           <Badge>{player.team.shortName}</Badge>
                         ) : (
                           <Badge variant="secondary">Unassigned</Badge>
@@ -309,7 +320,7 @@ export default function PlayersPage() {
                       <p className="text-xs text-muted-foreground">{player.department}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         <Badge variant="outline" className="text-[10px]">{player.position}</Badge>
-                        {player.team ? (
+                        {player.team && player.team.shortName ? (
                           <Badge className="text-[10px]">{player.team.shortName}</Badge>
                         ) : (
                           <Badge variant="secondary" className="text-[10px]">Unassigned</Badge>

@@ -2,12 +2,12 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react"
+import { ArrowLeft, Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle, ShieldAlert, Loader2 } from "lucide-react"
 import Link from "next/link"
 import * as XLSX from "xlsx"
 import { toast } from "sonner"
@@ -16,6 +16,20 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
 export default function CommitteeBulkImportPage() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [authorized, setAuthorized] = useState(false)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      const userData = JSON.parse(storedUser)
+      if (userData.role === 'SUPER_ADMIN') {
+        setAuthorized(true)
+      }
+    }
+    setLoading(false)
+  }, [])
+
   const [file, setFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -141,6 +155,44 @@ export default function CommitteeBulkImportPage() {
     } finally {
       setImporting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <ResponsiveLayout>
+        <div className="flex h-[80vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </ResponsiveLayout>
+    )
+  }
+
+  if (!authorized) {
+    return (
+      <ResponsiveLayout>
+        <div className="container mx-auto max-w-lg p-4 lg:p-6">
+          <Card className="text-center">
+            <CardHeader>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <ShieldAlert className="h-8 w-8 text-destructive" />
+              </div>
+              <CardTitle className="text-xl">Access Denied</CardTitle>
+              <CardDescription>
+                Only Super Admins can bulk import committee members.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/committee">
+                <Button variant="outline">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Committee
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </ResponsiveLayout>
+    )
   }
 
   return (

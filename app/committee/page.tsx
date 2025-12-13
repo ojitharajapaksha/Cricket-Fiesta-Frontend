@@ -32,8 +32,15 @@ export default function CommitteePage() {
   const [members, setMembers] = useState<CommitteeMember[]>([])
   const [teamCount, setTeamCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
+    // Check if user is Super Admin
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      const userData = JSON.parse(storedUser)
+      setIsSuperAdmin(userData.role === 'SUPER_ADMIN')
+    }
     fetchMembers()
     fetchTeamCount()
   }, [])
@@ -166,22 +173,26 @@ export default function CommitteePage() {
             <p className="text-xs text-muted-foreground lg:text-base">Manage organizing committee volunteers</p>
           </div>
           <div className="flex flex-wrap gap-1.5 lg:gap-2">
-            <Link href="/committee/bulk-import">
-              <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
-                <Upload className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Import</span>
-              </Button>
-            </Link>
+            {isSuperAdmin && (
+              <Link href="/committee/bulk-import">
+                <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
+                  <Upload className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Import</span>
+                </Button>
+              </Link>
+            )}
             <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
               <Download className="h-3 w-3 lg:h-4 lg:w-4" />
               <span className="hidden sm:inline">Export</span>
             </Button>
-            <Link href="/committee/new">
-              <Button className="gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
-                <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Add</span>
-              </Button>
-            </Link>
+            {isSuperAdmin && (
+              <Link href="/committee/new">
+                <Button className="gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
+                  <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Add</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, ScanLine, Search, CheckCircle2, XCircle, Loader2, Clock, UtensilsCrossed } from "lucide-react"
+import { ArrowLeft, ScanLine, Search, CheckCircle2, XCircle, Loader2, Clock, UtensilsCrossed, Camera, CameraOff } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -38,6 +38,8 @@ export default function ScannerPage() {
   const [scanning, setScanning] = useState(false)
   const [searching, setSearching] = useState(false)
   const [manualId, setManualId] = useState("")
+  const [cameraActive, setCameraActive] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
   const [scanResult, setScanResult] = useState<{
     success: boolean
     id?: string
@@ -214,23 +216,165 @@ export default function ScannerPage() {
     )
   }
 
-  // Admin Scanner View (existing functionality)
-  const handleStartScan = () => {
-    setScanning(true)
-    console.log("[v0] Starting QR scanner...")
-    // TODO: Implement QR code scanner using html5-qrcode library
+  // Admin Scanner View (with real camera)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const scannerRef = useRef<any>(null)
 
-    // Simulated scan result
-    setTimeout(() => {
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera()
+    }
+  }, [])
+
+  const startCamera = async () => {
+    setCameraError(null)
+    setScanning(true)
+    
+    try {
+      // Dynamically import QrScanner
+      const QrScanner = (await import('qr-scanner')).default
+      
+      if (!videoRef.current) {
+        throw new Error('Video element not found')
+      }
+
+      // Create scanner instance
+      scannerRef.current = new QrScanner(
+        videoRef.current,
+        (result: any) => {
+          // QR code detected
+          handleQRDetected(result.data)
+        },
+        {
+          returnDetailedScanResult: true,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          preferredCamera: 'environment', // Use back camera on mobile
+        }
+      )
+
+      await scannerRef.current.start()
+      setCameraActive(true)
+      toast.success('Camera started')
+    } catch (error: any) {
+      console.error('Camera error:', error)
+      setCameraError(error.message || 'Failed to access camera')
+      setScanning(false)
+      setCameraActive(false)
+      
+      if (error.name === 'NotAllowedError') {
+        toast.error('Camera permission denied. Please allow camera access.')
+      } else if (error.name === 'NotFoundError') {
+        toast.error('No camera found on this device.')
+      } else {
+        toast.error('Failed to start camera: ' + error.message)
+      }
+    }
+  }
+
+  const stopCamera = () => {
+    if (scannerRef.current) {
+      scannerRef.current.stop()
+      scannerRef.current.destroy()
+      scannerRef.current = null
+    }
+    setCameraActive(false)
+    setScanning(false)
+  }
+
+  const handleQRDetected = async (data: string) => {
+    // Stop camera after detection
+    stopCamera()
+    
+    // The QR code contains the trainee ID
+    // Parse the QR data - it might be JSON or just the ID
+    let traineeId = data
+    try {
+      const parsed = JSON.parse(data)
+      traineeId = parsed.traineeId || parsed.id || data
+    } catch {
+      // Not JSON, use as-is
+      traineeId = data
+    }
+    
+    toast.info(`QR Code detected: ${traineeId}`)
+    
+    // Search for the registration
+    setSearching(true)
+    try {
+      const token = localStorage.getItem("token")
+      
+      const response = await fetch(`${API_URL}/api/food/registrations?traineeId=${encodeURIComponent(traineeId)}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      
+      if (!response.ok) throw new Error("Failed to search")
+      
+      const responseData = await response.json()
+      const registrations = responseData.data || []
+      
+      // Find exact match
+      const registration = registrations.find((r: any) => 
+        r.traineeId.toLowerCase() === traineeId.toLowerCase()
+      )
+      
+      if (!registration) {
+        setScanResult({
+          success: false,
+          name: "",
+          traineeId: traineeId,
+          preference: "",
+          message: "No registration found with this QR code",
+        })
+        return
+      }
+      
+      if (registration.foodCollected) {
+        setScanResult({
+          success: true,
+          id: registration.id,
+          name: registration.fullName,
+          traineeId: registration.traineeId,
+          preference: registration.foodPreference === "VEGETARIAN" ? "Vegetarian" : "Non-Vegetarian",
+          message: `Food already collected at ${new Date(registration.foodCollectedAt).toLocaleTimeString()}`,
+          alreadyCollected: true,
+        })
+        return
+      }
+      
       setScanResult({
         success: true,
-        name: "Kasun Perera",
-        traineeId: "TRN001",
-        preference: "Non-Vegetarian",
-        message: "Meal collected successfully!",
+        id: registration.id,
+        name: registration.fullName,
+        traineeId: registration.traineeId,
+        preference: registration.foodPreference === "VEGETARIAN" ? "Vegetarian" : "Non-Vegetarian",
+        message: "Participant found. Click confirm to mark as collected.",
+        alreadyCollected: false,
       })
-      setScanning(false)
-    }, 2000)
+    } catch (error: any) {
+      console.error("QR Search error:", error)
+      toast.error("Failed to process QR code")
+      setScanResult({
+        success: false,
+        name: "",
+        traineeId: traineeId,
+        preference: "",
+        message: error.message || "Failed to process QR code",
+      })
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  const handleStartScan = () => {
+    if (cameraActive) {
+      stopCamera()
+    } else {
+      startCamera()
+    }
   }
 
   const handleManualSearch = async () => {
@@ -365,24 +509,63 @@ export default function ScannerPage() {
           <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
             <div className="space-y-3 lg:space-y-4">
               {/* Camera View */}
-              <div className="flex aspect-video items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50">
-                {scanning ? (
+              <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-black">
+                {/* Video element for camera */}
+                <video 
+                  ref={videoRef}
+                  className={`h-full w-full object-cover ${cameraActive ? 'block' : 'hidden'}`}
+                  playsInline
+                  muted
+                />
+                
+                {/* Placeholder when camera is off */}
+                {!cameraActive && !cameraError && (
                   <div className="text-center">
-                    <ScanLine className="mx-auto mb-3 h-12 w-12 animate-pulse text-primary lg:mb-4 lg:h-16 lg:w-16" />
-                    <p className="text-xs text-muted-foreground lg:text-sm">Scanning...</p>
+                    <Camera className="mx-auto mb-3 h-12 w-12 text-muted-foreground lg:mb-4 lg:h-16 lg:w-16" />
+                    <p className="mb-1.5 text-xs font-medium text-white lg:mb-2 lg:text-sm">Ready to scan</p>
+                    <p className="text-[10px] text-gray-400 lg:text-xs">Click the button below to start camera</p>
                   </div>
-                ) : (
-                  <div className="text-center">
-                    <ScanLine className="mx-auto mb-3 h-12 w-12 text-muted-foreground lg:mb-4 lg:h-16 lg:w-16" />
-                    <p className="mb-1.5 text-xs font-medium text-foreground lg:mb-2 lg:text-sm">Ready to scan</p>
-                    <p className="text-[10px] text-muted-foreground lg:text-xs">Camera will activate when you start scanning</p>
+                )}
+
+                {/* Camera Error */}
+                {cameraError && (
+                  <div className="text-center p-4">
+                    <CameraOff className="mx-auto mb-3 h-12 w-12 text-destructive lg:mb-4 lg:h-16 lg:w-16" />
+                    <p className="mb-1.5 text-xs font-medium text-white lg:mb-2 lg:text-sm">Camera Error</p>
+                    <p className="text-[10px] text-gray-400 lg:text-xs max-w-xs">{cameraError}</p>
+                  </div>
+                )}
+
+                {/* Scanning indicator */}
+                {cameraActive && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 border-4 border-primary/50 animate-pulse rounded-lg" />
+                    <div className="absolute top-2 left-2 bg-red-500 w-3 h-3 rounded-full animate-pulse" />
+                    <p className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white bg-black/50 px-2 py-1 rounded">
+                      Point at QR code
+                    </p>
                   </div>
                 )}
               </div>
 
-              <Button onClick={handleStartScan} disabled={scanning} className="w-full gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
-                <ScanLine className="h-3 w-3 lg:h-4 lg:w-4" />
-                {scanning ? "Scanning..." : "Start Scanning"}
+              <Button 
+                onClick={handleStartScan} 
+                disabled={searching} 
+                variant={cameraActive ? "destructive" : "default"}
+                className="w-full gap-1.5 text-xs lg:gap-2 lg:text-sm" 
+                size="sm"
+              >
+                {cameraActive ? (
+                  <>
+                    <CameraOff className="h-3 w-3 lg:h-4 lg:w-4" />
+                    Stop Camera
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-3 w-3 lg:h-4 lg:w-4" />
+                    Start Camera
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>

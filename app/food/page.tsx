@@ -43,8 +43,15 @@ export default function FoodPage() {
   const [showBulkEmailDialog, setShowBulkEmailDialog] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
+    // Check if user is Super Admin
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      const userData = JSON.parse(storedUser)
+      setIsSuperAdmin(userData.role === 'SUPER_ADMIN')
+    }
     fetchRegistrations()
   }, [])
 
@@ -204,43 +211,49 @@ export default function FoodPage() {
             <p className="text-xs text-muted-foreground lg:text-base">Manage meal registrations and QR-based distribution</p>
           </div>
           <div className="flex flex-wrap gap-1.5 lg:gap-2">
-            <Button 
-              variant="outline" 
-              className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm"
-              size="sm"
-              onClick={() => setShowBulkEmailDialog(true)}
-              disabled={sendingBulkEmail}
-            >
-              {sendingBulkEmail ? (
-                <Loader2 className="h-3 w-3 animate-spin lg:h-4 lg:w-4" />
-              ) : (
-                <Mail className="h-3 w-3 lg:h-4 lg:w-4" />
-              )}
-              <span className="hidden sm:inline">{selectedIds.length > 0 ? `Email (${selectedIds.length})` : "Send Emails"}</span>
-              <span className="sm:hidden"><Mail className="h-3 w-3" /></span>
-            </Button>
+            {isSuperAdmin && (
+              <Button 
+                variant="outline" 
+                className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm"
+                size="sm"
+                onClick={() => setShowBulkEmailDialog(true)}
+                disabled={sendingBulkEmail}
+              >
+                {sendingBulkEmail ? (
+                  <Loader2 className="h-3 w-3 animate-spin lg:h-4 lg:w-4" />
+                ) : (
+                  <Mail className="h-3 w-3 lg:h-4 lg:w-4" />
+                )}
+                <span className="hidden sm:inline">{selectedIds.length > 0 ? `Email (${selectedIds.length})` : "Send Emails"}</span>
+                <span className="sm:hidden"><Mail className="h-3 w-3" /></span>
+              </Button>
+            )}
             <Link href="/food/scanner">
               <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
                 <ScanLine className="h-3 w-3 lg:h-4 lg:w-4" />
                 <span className="hidden sm:inline">Scanner</span>
               </Button>
             </Link>
-            <Link href="/food/bulk-import">
-              <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
-                <Upload className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Import</span>
-              </Button>
-            </Link>
+            {isSuperAdmin && (
+              <Link href="/food/bulk-import">
+                <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
+                  <Upload className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Import</span>
+                </Button>
+              </Link>
+            )}
             <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
               <Download className="h-3 w-3 lg:h-4 lg:w-4" />
               <span className="hidden sm:inline">Export</span>
             </Button>
-            <Link href="/food/new">
-              <Button className="gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
-                <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Add</span>
-              </Button>
-            </Link>
+            {isSuperAdmin && (
+              <Link href="/food/new">
+                <Button className="gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
+                  <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Add</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -309,14 +322,16 @@ export default function FoodPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]">
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-gray-300"
-                    />
-                  </TableHead>
+                  {isSuperAdmin && (
+                    <TableHead className="w-[50px]">
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={toggleSelectAll}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Name</TableHead>
                   <TableHead>Trainee ID</TableHead>
                   <TableHead>Email</TableHead>
@@ -329,22 +344,24 @@ export default function FoodPage() {
               <TableBody>
                 {filteredRegistrations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={isSuperAdmin ? 8 : 7} className="text-center text-muted-foreground">
                       No registrations found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredRegistrations.map((reg) => (
                     <TableRow key={reg.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(reg.id)}
-                          onChange={() => toggleSelect(reg.id)}
-                          disabled={!reg.email}
-                          className="h-4 w-4 rounded border-gray-300 disabled:opacity-50"
-                        />
-                      </TableCell>
+                      {isSuperAdmin && (
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(reg.id)}
+                            onChange={() => toggleSelect(reg.id)}
+                            disabled={!reg.email}
+                            className="h-4 w-4 rounded border-gray-300 disabled:opacity-50"
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">{reg.fullName}</TableCell>
                       <TableCell>
                         <code className="text-xs">{reg.traineeId}</code>
@@ -385,7 +402,7 @@ export default function FoodPage() {
                               <QrCode className="mr-2 h-4 w-4" />
                               View QR Code
                             </DropdownMenuItem>
-                            {reg.email && (
+                            {isSuperAdmin && reg.email && (
                               <DropdownMenuItem 
                                 onClick={() => handleSendEmail(reg.id)}
                                 disabled={sendingEmail === reg.id}
@@ -434,13 +451,15 @@ export default function FoodPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(reg.id)}
-                          onChange={() => toggleSelect(reg.id)}
-                          disabled={!reg.email}
-                          className="h-3.5 w-3.5 rounded border-gray-300 disabled:opacity-50"
-                        />
+                        {isSuperAdmin && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(reg.id)}
+                            onChange={() => toggleSelect(reg.id)}
+                            disabled={!reg.email}
+                            className="h-3.5 w-3.5 rounded border-gray-300 disabled:opacity-50"
+                          />
+                        )}
                         <span className="truncate text-sm font-medium">{reg.fullName}</span>
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
@@ -465,7 +484,7 @@ export default function FoodPage() {
                           <QrCode className="mr-2 h-3.5 w-3.5" />
                           View QR
                         </DropdownMenuItem>
-                        {reg.email && (
+                        {isSuperAdmin && reg.email && (
                           <DropdownMenuItem onClick={() => handleSendEmail(reg.id)} disabled={sendingEmail === reg.id}>
                             {sendingEmail === reg.id ? (
                               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />

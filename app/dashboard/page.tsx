@@ -5,7 +5,7 @@ import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle } from "lucide-react"
+import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -27,6 +27,9 @@ interface UserData {
   lastName?: string;
   role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
   traineeId?: string;
+  userType?: 'player' | 'committee' | 'food' | 'user';
+  committeeId?: string;
+  playerId?: string;
 }
 
 interface DashboardStats {
@@ -126,6 +129,22 @@ export default function DashboardPage() {
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
+
+      // Auto check-in if user is a committee member
+      if (userData.userType === 'committee') {
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/committee/check-in-by-email`, {
+            method: 'POST',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: userData.email })
+          });
+        } catch (checkInError) {
+          console.error("Error auto check-in committee member:", checkInError);
+        }
+      }
 
       // Fetch player info by email/traineeId
       const [playerRes, matchesRes] = await Promise.all([
@@ -570,6 +589,14 @@ export default function DashboardPage() {
                     Manage Committee
                   </Button>
                 </Link>
+                {user?.role === 'SUPER_ADMIN' && (
+                  <Link href="/admin/user-requests">
+                    <Button className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" variant="outline" size="sm">
+                      <UserCheck className="h-3 w-3 lg:h-4 lg:w-4" />
+                      User Login Requests
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
 
