@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, Users, UtensilsCrossed, CalendarDays, Award, BarChart3 } from "lucide-react"
+import { Trophy, Users, UtensilsCrossed, CalendarDays, Award, BarChart3, Home } from "lucide-react"
 import { CountdownTimer } from "@/components/countdown-timer"
 import { StatsSection } from "@/components/stats-section"
 
@@ -24,7 +24,32 @@ export default function HomePage() {
                 <p className="text-[10px] text-muted-foreground lg:text-xs">SLT Trainees 2024</p>
               </div>
             </div>
+            
+            {/* Navigation */}
+            <nav className="hidden md:flex items-center gap-1">
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm gap-1.5">
+                  <Home className="h-4 w-4" />
+                  Home
+                </Button>
+              </Link>
+              <Link href="/oc-members">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm gap-1.5">
+                  <Users className="h-4 w-4" />
+                  OC Members
+                </Button>
+              </Link>
+            </nav>
+            
             <div className="flex items-center gap-2 lg:gap-3">
+              {/* Mobile Navigation */}
+              <div className="flex md:hidden items-center gap-1">
+                <Link href="/oc-members">
+                  <Button variant="ghost" size="sm" className="text-xs px-2">
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
               <Link href="/login">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm">Login</Button>
               </Link>
