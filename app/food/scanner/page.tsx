@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { ResponsiveLayout } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,241 +31,166 @@ interface FoodRegistration {
   qrCode: string;
 }
 
-export default function ScannerPage() {
-  const [user, setUser] = useState<UserData | null>(null)
+interface ScanResult {
+  success: boolean
+  id?: string
+  name: string
+  traineeId: string
+  preference: string
+  message: string
+  alreadyCollected?: boolean
+}
+
+// Player Food Status Component
+function PlayerFoodStatus({ email }: { email: string }) {
   const [playerFoodStatus, setPlayerFoodStatus] = useState<FoodRegistration | null>(null)
-  const [loadingStatus, setLoadingStatus] = useState(true)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPlayerFoodStatus = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await fetch(`${API_URL}/api/food/registrations?email=${encodeURIComponent(email)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          const registrations = data.data || []
+          const myRegistration = registrations.find((r: FoodRegistration) => 
+            r.email?.toLowerCase() === email.toLowerCase()
+          )
+          setPlayerFoodStatus(myRegistration || null)
+        }
+      } catch (error) {
+        console.error("Error fetching food status:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPlayerFoodStatus()
+  }, [email])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  return (
+    <ResponsiveLayout>
+      <div className="container mx-auto max-w-2xl px-3 py-4 lg:p-6">
+        <div className="mb-4 lg:mb-6">
+          <h1 className="mb-1 text-lg font-bold text-foreground lg:mb-2 lg:text-3xl">Food Status</h1>
+          <p className="text-xs text-muted-foreground lg:text-base">Check your meal registration and collection status</p>
+        </div>
+
+        <Card>
+          <CardHeader className="p-3 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
+              <UtensilsCrossed className="h-4 w-4 lg:h-5 lg:w-5" />
+              Your Meal Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+            {playerFoodStatus ? (
+              <div className="space-y-3 lg:space-y-4">
+                <div className={`flex items-center gap-3 rounded-lg p-3 lg:gap-4 lg:p-4 ${
+                  playerFoodStatus.foodCollected 
+                    ? 'bg-green-500/10 border border-green-500/20' 
+                    : 'bg-orange-500/10 border border-orange-500/20'
+                }`}>
+                  {playerFoodStatus.foodCollected ? (
+                    <>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20 lg:h-14 lg:w-14">
+                        <CheckCircle2 className="h-5 w-5 text-green-500 lg:h-8 lg:w-8" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-green-600 lg:text-xl">Meal Collected ✓</p>
+                        <p className="text-[10px] text-muted-foreground lg:text-sm">
+                          {new Date(playerFoodStatus.foodCollectedAt!).toLocaleString()}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/20 lg:h-14 lg:w-14">
+                        <Clock className="h-5 w-5 text-orange-500 lg:h-8 lg:w-8" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-orange-600 lg:text-xl">Pending Collection</p>
+                        <p className="text-[10px] text-muted-foreground lg:text-sm">Show QR code at food counter</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {!playerFoodStatus.foodCollected && playerFoodStatus.qrCode && (
+                  <div className="flex flex-col items-center rounded-lg border bg-white p-4 lg:p-6">
+                    <p className="mb-3 text-xs font-semibold text-gray-700 lg:mb-4 lg:text-base">Your Food QR Code</p>
+                    <div className="rounded-lg border-4 border-primary/20 bg-white p-2">
+                      <img src={playerFoodStatus.qrCode} alt="Food QR Code" className="h-36 w-36 lg:h-64 lg:w-64" />
+                    </div>
+                    <p className="mt-3 text-center text-[10px] text-gray-500 lg:mt-4 lg:text-sm">
+                      Show this QR code to the organizer
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-primary">{playerFoodStatus.traineeId}</p>
+                  </div>
+                )}
+
+                <div className="rounded-lg border bg-card p-3 lg:p-4">
+                  <h3 className="mb-2 text-xs font-semibold text-foreground lg:mb-3 lg:text-base">Details</h3>
+                  <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">Name</p>
+                      <p className="text-xs font-medium lg:text-base">{playerFoodStatus.fullName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">Trainee ID</p>
+                      <p className="text-xs font-medium lg:text-base">{playerFoodStatus.traineeId}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">Department</p>
+                      <p className="text-xs font-medium lg:text-base">{playerFoodStatus.department}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground lg:text-xs">Preference</p>
+                      <p className="text-xs font-medium lg:text-base">
+                        {playerFoodStatus.foodPreference === 'VEGETARIAN' ? 'Veg' : 'Non-Veg'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-center lg:py-8">
+                <XCircle className="mb-2 h-10 w-10 text-muted-foreground lg:mb-3 lg:h-12 lg:w-12" />
+                <p className="text-sm font-medium text-foreground lg:text-base">No Food Registration Found</p>
+                <p className="text-xs text-muted-foreground lg:text-sm">Contact an organizer if this is an error</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </ResponsiveLayout>
+  )
+}
+
+// Admin QR Scanner Component
+function AdminScanner() {
   const [scanning, setScanning] = useState(false)
   const [searching, setSearching] = useState(false)
   const [manualId, setManualId] = useState("")
   const [cameraActive, setCameraActive] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  const [scanResult, setScanResult] = useState<{
-    success: boolean
-    id?: string
-    name: string
-    traineeId: string
-    preference: string
-    message: string
-    alreadyCollected?: boolean
-  } | null>(null)
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null)
 
   const html5QrCodeRef = useRef<any>(null)
   const scannerContainerId = "qr-reader"
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      setUser(userData)
-      
-      if (userData.role === 'USER') {
-        fetchPlayerFoodStatus(userData.email)
-      } else {
-        setLoadingStatus(false)
-      }
-    } else {
-      setLoadingStatus(false)
-    }
-  }, [])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopCamera()
-    }
-  }, [])
-
-  const fetchPlayerFoodStatus = async (email: string) => {
-    try {
-      const token = localStorage.getItem("token")
-      const response = await fetch(`${API_URL}/api/food/registrations?email=${encodeURIComponent(email)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const registrations = data.data || []
-        const myRegistration = registrations.find((r: FoodRegistration) => 
-          r.email?.toLowerCase() === email.toLowerCase()
-        )
-        setPlayerFoodStatus(myRegistration || null)
-      }
-    } catch (error) {
-      console.error("Error fetching food status:", error)
-    } finally {
-      setLoadingStatus(false)
-    }
-  }
-
-  // Player Food Status View
-  if (user?.role === 'USER') {
-    if (loadingStatus) {
-      return (
-        <div className="flex h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )
-    }
-
-    return (
-      <ResponsiveLayout>
-        <div className="container mx-auto max-w-2xl px-3 py-4 lg:p-6">
-          <div className="mb-4 lg:mb-6">
-            <h1 className="mb-1 text-lg font-bold text-foreground lg:mb-2 lg:text-3xl">Food Status</h1>
-            <p className="text-xs text-muted-foreground lg:text-base">Check your meal registration and collection status</p>
-          </div>
-
-          <Card>
-            <CardHeader className="p-3 lg:p-6">
-              <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
-                <UtensilsCrossed className="h-4 w-4 lg:h-5 lg:w-5" />
-                Your Meal Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
-              {playerFoodStatus ? (
-                <div className="space-y-3 lg:space-y-4">
-                  <div className={`flex items-center gap-3 rounded-lg p-3 lg:gap-4 lg:p-4 ${
-                    playerFoodStatus.foodCollected 
-                      ? 'bg-green-500/10 border border-green-500/20' 
-                      : 'bg-orange-500/10 border border-orange-500/20'
-                  }`}>
-                    {playerFoodStatus.foodCollected ? (
-                      <>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20 lg:h-14 lg:w-14">
-                          <CheckCircle2 className="h-5 w-5 text-green-500 lg:h-8 lg:w-8" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-green-600 lg:text-xl">Meal Collected ✓</p>
-                          <p className="text-[10px] text-muted-foreground lg:text-sm">
-                            {new Date(playerFoodStatus.foodCollectedAt!).toLocaleString()}
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/20 lg:h-14 lg:w-14">
-                          <Clock className="h-5 w-5 text-orange-500 lg:h-8 lg:w-8" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-orange-600 lg:text-xl">Pending Collection</p>
-                          <p className="text-[10px] text-muted-foreground lg:text-sm">Show QR code at food counter</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {!playerFoodStatus.foodCollected && playerFoodStatus.qrCode && (
-                    <div className="flex flex-col items-center rounded-lg border bg-white p-4 lg:p-6">
-                      <p className="mb-3 text-xs font-semibold text-gray-700 lg:mb-4 lg:text-base">Your Food QR Code</p>
-                      <div className="rounded-lg border-4 border-primary/20 bg-white p-2">
-                        <img src={playerFoodStatus.qrCode} alt="Food QR Code" className="h-36 w-36 lg:h-64 lg:w-64" />
-                      </div>
-                      <p className="mt-3 text-center text-[10px] text-gray-500 lg:mt-4 lg:text-sm">
-                        Show this QR code to the organizer
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-primary">{playerFoodStatus.traineeId}</p>
-                    </div>
-                  )}
-
-                  <div className="rounded-lg border bg-card p-3 lg:p-4">
-                    <h3 className="mb-2 text-xs font-semibold text-foreground lg:mb-3 lg:text-base">Details</h3>
-                    <div className="grid grid-cols-2 gap-2 lg:gap-3">
-                      <div>
-                        <p className="text-[10px] text-muted-foreground lg:text-xs">Name</p>
-                        <p className="text-xs font-medium lg:text-base">{playerFoodStatus.fullName}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground lg:text-xs">Trainee ID</p>
-                        <p className="text-xs font-medium lg:text-base">{playerFoodStatus.traineeId}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground lg:text-xs">Department</p>
-                        <p className="text-xs font-medium lg:text-base">{playerFoodStatus.department}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground lg:text-xs">Preference</p>
-                        <p className="text-xs font-medium lg:text-base">
-                          {playerFoodStatus.foodPreference === 'VEGETARIAN' ? 'Veg' : 'Non-Veg'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-6 text-center lg:py-8">
-                  <XCircle className="mb-2 h-10 w-10 text-muted-foreground lg:mb-3 lg:h-12 lg:w-12" />
-                  <p className="text-sm font-medium text-foreground lg:text-base">No Food Registration Found</p>
-                  <p className="text-xs text-muted-foreground lg:text-sm">Contact an organizer if this is an error</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </ResponsiveLayout>
-    )
-  }
-
-  // Admin Scanner Functions
-  const startCamera = async () => {
-    setCameraError(null)
-    setScanning(true)
-    setScanResult(null)
-
-    try {
-      const { Html5Qrcode } = await import('html5-qrcode')
-      
-      // Create scanner instance
-      html5QrCodeRef.current = new Html5Qrcode(scannerContainerId)
-
-      const qrCodeSuccessCallback = (decodedText: string) => {
-        // Stop scanning after successful read
-        stopCamera()
-        handleQRDetected(decodedText)
-      }
-
-      const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-      }
-
-      // Try back camera first, fall back to any camera
-      try {
-        await html5QrCodeRef.current.start(
-          { facingMode: "environment" },
-          config,
-          qrCodeSuccessCallback,
-          () => {} // Ignore errors during scanning
-        )
-      } catch {
-        // Try front camera
-        await html5QrCodeRef.current.start(
-          { facingMode: "user" },
-          config,
-          qrCodeSuccessCallback,
-          () => {}
-        )
-      }
-
-      setCameraActive(true)
-      toast.success('Camera started - point at QR code')
-    } catch (error: any) {
-      console.error('Camera error:', error)
-      setCameraError(error.message || 'Failed to start camera')
-      setScanning(false)
-      setCameraActive(false)
-      
-      if (error.message?.includes('Permission')) {
-        toast.error('Camera permission denied. Please allow camera access.')
-      } else {
-        toast.error('Failed to start camera: ' + (error.message || 'Unknown error'))
-      }
-    }
-  }
-
-  const stopCamera = async () => {
+  const stopCamera = useCallback(async () => {
     if (html5QrCodeRef.current) {
       try {
         const state = html5QrCodeRef.current.getState()
@@ -280,24 +205,23 @@ export default function ScannerPage() {
     }
     setCameraActive(false)
     setScanning(false)
-  }
+  }, [])
 
-  const handleQRDetected = async (data: string) => {
-    let traineeId = data.trim()
-    
-    // Try to parse if JSON
-    try {
-      const parsed = JSON.parse(data)
-      traineeId = parsed.traineeId || parsed.id || data
-    } catch {
-      // Not JSON, use as-is
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (html5QrCodeRef.current) {
+        try {
+          html5QrCodeRef.current.stop()
+          html5QrCodeRef.current.clear()
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+      }
     }
+  }, [])
 
-    toast.info(`QR detected: ${traineeId}`)
-    await searchTrainee(traineeId)
-  }
-
-  const searchTrainee = async (traineeId: string) => {
+  const searchTrainee = useCallback(async (traineeId: string) => {
     setSearching(true)
     
     try {
@@ -360,7 +284,101 @@ export default function ScannerPage() {
     } finally {
       setSearching(false)
     }
-  }
+  }, [])
+
+  const handleQRDetected = useCallback(async (data: string) => {
+    let traineeId = data.trim()
+    
+    // Try to parse if JSON
+    try {
+      const parsed = JSON.parse(data)
+      traineeId = parsed.traineeId || parsed.id || data
+    } catch {
+      // Not JSON, use as-is
+    }
+
+    toast.info(`QR detected: ${traineeId}`)
+    await searchTrainee(traineeId)
+  }, [searchTrainee])
+
+  const startCamera = useCallback(async () => {
+    setCameraError(null)
+    setScanning(true)
+    setScanResult(null)
+
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode')
+      
+      // Create scanner instance
+      html5QrCodeRef.current = new Html5Qrcode(scannerContainerId)
+
+      const qrCodeSuccessCallback = (decodedText: string) => {
+        // Stop scanning after successful read
+        stopCamera()
+        handleQRDetected(decodedText)
+      }
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+      }
+
+      // Try back camera first, fall back to any camera
+      try {
+        await html5QrCodeRef.current.start(
+          { facingMode: "environment" },
+          config,
+          qrCodeSuccessCallback,
+          () => {} // Ignore errors during scanning
+        )
+        setCameraActive(true)
+        toast.success('Camera started - point at QR code')
+      } catch (backCamError) {
+        console.log('Back camera failed, trying front camera:', backCamError)
+        // Try front camera
+        try {
+          await html5QrCodeRef.current.start(
+            { facingMode: "user" },
+            config,
+            qrCodeSuccessCallback,
+            () => {}
+          )
+          setCameraActive(true)
+          toast.success('Camera started - point at QR code')
+        } catch (frontCamError) {
+          console.log('Front camera failed, trying any camera:', frontCamError)
+          // Try any available camera
+          const devices = await Html5Qrcode.getCameras()
+          if (devices && devices.length > 0) {
+            await html5QrCodeRef.current.start(
+              devices[0].id,
+              config,
+              qrCodeSuccessCallback,
+              () => {}
+            )
+            setCameraActive(true)
+            toast.success('Camera started - point at QR code')
+          } else {
+            throw new Error('No camera found on this device')
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Camera error:', error)
+      setCameraError(error.message || 'Failed to start camera')
+      setScanning(false)
+      setCameraActive(false)
+      
+      if (error.message?.includes('Permission') || error.name === 'NotAllowedError') {
+        toast.error('Camera permission denied. Please allow camera access in browser settings.')
+      } else if (error.message?.includes('No camera') || error.name === 'NotFoundError') {
+        toast.error('No camera found on this device.')
+      } else {
+        toast.error('Failed to start camera: ' + (error.message || 'Unknown error'))
+      }
+    }
+  }, [stopCamera, handleQRDetected])
 
   const handleManualSearch = async () => {
     if (!manualId.trim()) {
@@ -410,7 +428,6 @@ export default function ScannerPage() {
     }
   }
 
-  // Admin Scanner View
   return (
     <ResponsiveLayout>
       <div className="container mx-auto max-w-lg px-3 py-4 lg:max-w-3xl lg:p-6">
@@ -439,8 +456,11 @@ export default function ScannerPage() {
                 {/* Scanner container - html5-qrcode will render here */}
                 <div 
                   id={scannerContainerId} 
-                  className={`w-full ${cameraActive ? 'min-h-[280px] lg:min-h-[400px]' : 'hidden'}`}
-                  style={{ position: 'relative' }}
+                  className="w-full"
+                  style={{ 
+                    minHeight: cameraActive ? '300px' : '0px',
+                    display: cameraActive ? 'block' : 'none'
+                  }}
                 />
                 
                 {/* Placeholder when camera is off */}
@@ -601,6 +621,7 @@ export default function ScannerPage() {
           <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
             <ol className="list-decimal space-y-1 pl-4 text-xs text-muted-foreground lg:space-y-2 lg:text-sm">
               <li>Click "Start Scanning" button</li>
+              <li>Allow camera permission when prompted</li>
               <li>Point camera at participant's QR code</li>
               <li>QR code will be detected automatically</li>
               <li>Verify details and click "Confirm Collection"</li>
@@ -611,4 +632,34 @@ export default function ScannerPage() {
       </div>
     </ResponsiveLayout>
   )
+}
+
+// Main Page Component
+export default function ScannerPage() {
+  const [user, setUser] = useState<UserData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+    setLoading(false)
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Show player view for USER role
+  if (user?.role === 'USER') {
+    return <PlayerFoodStatus email={user.email} />
+  }
+
+  // Show admin scanner for ADMIN and SUPER_ADMIN
+  return <AdminScanner />
 }
