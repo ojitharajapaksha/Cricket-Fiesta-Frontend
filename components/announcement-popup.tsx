@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { X, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface Announcement {
   id: string
@@ -84,9 +83,7 @@ export function AnnouncementPopup() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-fit max-w-[95vw] p-0 overflow-hidden border-4 border-gray-200 bg-white rounded-xl shadow-2xl [&>button]:hidden">
-        <VisuallyHidden>
-          <DialogTitle>{current.title}</DialogTitle>
-        </VisuallyHidden>
+        <DialogTitle className="sr-only">{current.title}</DialogTitle>
         
         {/* Close X button in top right */}
         <button
