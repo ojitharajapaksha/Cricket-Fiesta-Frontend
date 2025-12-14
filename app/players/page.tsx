@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, UserCheck, Loader2 } from "lucide-react"
+import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, UserCheck, Loader2, RefreshCw, Building2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
@@ -38,14 +39,18 @@ export default function PlayersPage() {
   const { loading: authLoading, isAuthenticated, isSuperAdmin, token } = useAuth('ADMIN_OR_SUPER')
   
   const [searchQuery, setSearchQuery] = useState("")
+  const [projectFilter, setProjectFilter] = useState<string>("all")
   const [players, setPlayers] = useState<Player[]>([])
+  const [projects, setProjects] = useState<string[]>([])
   const [teamCount, setTeamCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated && token) {
       fetchPlayers()
       fetchTeamCount()
+      fetchProjects()
     }
   }, [isAuthenticated, token])
 
@@ -66,6 +71,23 @@ export default function PlayersPage() {
       toast.error("Failed to load players");
     } finally {
       setLoading(false);
+    }
+  }
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/projects`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
     }
   }
 
@@ -105,6 +127,13 @@ export default function PlayersPage() {
     }
   }
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchPlayers(), fetchProjects(), fetchTeamCount()]);
+    setRefreshing(false);
+    toast.success("Data refreshed");
+  }
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -115,10 +144,17 @@ export default function PlayersPage() {
   }
 
   const filteredPlayers = players.filter(
-    (player) =>
-      player.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.position.toLowerCase().includes(searchQuery.toLowerCase()),
+    (player) => {
+      const matchesSearch = player.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        player.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        player.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (player.projectName && player.projectName.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesProject = projectFilter === "all" || 
+        (projectFilter === "unassigned" ? !player.projectName : player.projectName === projectFilter);
+      
+      return matchesSearch && matchesProject;
+    }
   )
 
   const attendedCount = players.filter((p) => p.attended).length
@@ -142,6 +178,16 @@ export default function PlayersPage() {
             <p className="text-xs text-muted-foreground lg:text-base">Manage player registrations, teams, and attendance</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 bg-transparent text-xs lg:text-sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw className={`h-3 w-3 lg:h-4 lg:w-4 ${refreshing ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{refreshing ? "Refreshing..." : "Refresh"}</span>
+            </Button>
             {isSuperAdmin && (
               <Link href="/players/bulk-import">
                 <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
@@ -168,7 +214,7 @@ export default function PlayersPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="mb-4 grid grid-cols-2 gap-2 lg:mb-6 lg:grid-cols-4 lg:gap-4">
+        <div className="mb-4 grid grid-cols-2 gap-2 lg:mb-6 lg:grid-cols-5 lg:gap-4">
           <Card>
             <CardHeader className="p-3 pb-1 lg:pb-3">
               <CardTitle className="text-[10px] font-medium text-muted-foreground lg:text-sm">Total Players</CardTitle>
@@ -183,6 +229,14 @@ export default function PlayersPage() {
             </CardHeader>
             <CardContent className="p-3 pt-0">
               <div className="text-lg font-bold lg:text-2xl">{attendedCount}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="p-3 pb-1 lg:pb-3">
+              <CardTitle className="text-[10px] font-medium text-muted-foreground lg:text-sm">Projects</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold lg:text-2xl">{projects.length}</div>
             </CardContent>
           </Card>
           <Card>
@@ -210,13 +264,29 @@ export default function PlayersPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground lg:h-4 lg:w-4" />
                 <Input
-                  placeholder="Search by name, department..."
+                  placeholder="Search by name, department, project..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8 text-xs lg:pl-9 lg:text-sm"
                 />
               </div>
-              <Button variant="outline" size="sm" className="text-xs lg:text-sm">Filter</Button>
+              {projects.length > 0 && (
+                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px] text-xs lg:text-sm">
+                    <Building2 className="mr-2 h-3 w-3 lg:h-4 lg:w-4" />
+                    <SelectValue placeholder="Filter by Project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Projects</SelectItem>
+                    <SelectItem value="unassigned">No Project</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem key={project} value={project}>
+                        {project}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </CardContent>
         </Card>

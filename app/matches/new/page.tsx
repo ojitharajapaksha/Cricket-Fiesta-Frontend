@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ArrowLeft, Save, Loader2, Users, Building2 } from "lucide-react"
+import { ArrowLeft, Save, Loader2, Users, Building2, Clock, Zap } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
@@ -51,6 +51,20 @@ export default function NewMatchPage() {
     umpire2: "",
     scorer: "",
   })
+
+  // Quick time presets
+  const timePresets = [
+    { label: "Morning", time: "09:00" },
+    { label: "Midday", time: "12:00" },
+    { label: "Afternoon", time: "15:00" },
+    { label: "Evening", time: "18:00" },
+  ]
+
+  // Set today's date as default
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setFormData(prev => ({ ...prev, scheduledDate: today }));
+  }, [])
 
   useEffect(() => {
     if (isAuthenticated && token) {
@@ -165,7 +179,18 @@ export default function NewMatchPage() {
   }
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      
+      // Auto-set overs based on match type
+      if (field === "matchType") {
+        if (value === "T10") updated.overs = "10";
+        else if (value === "T15") updated.overs = "15";
+        else if (value === "T20") updated.overs = "20";
+      }
+      
+      return updated;
+    })
   }
 
   return (
@@ -391,7 +416,10 @@ export default function NewMatchPage() {
           {/* Schedule */}
           <Card>
             <CardHeader className="p-3 lg:p-6">
-              <CardTitle className="text-base lg:text-xl">Schedule</CardTitle>
+              <CardTitle className="text-base lg:text-xl flex items-center gap-2">
+                <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
+                Schedule
+              </CardTitle>
               <CardDescription className="text-xs lg:text-sm">Set match date, time and venue</CardDescription>
             </CardHeader>
             <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0 space-y-3 lg:space-y-4">
@@ -420,6 +448,28 @@ export default function NewMatchPage() {
                     onChange={(e) => handleChange("scheduledTime", e.target.value)}
                     required
                   />
+                </div>
+              </div>
+
+              {/* Quick Time Presets */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Zap className="h-3 w-3" />
+                  Quick Select Time
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {timePresets.map((preset) => (
+                    <Button
+                      key={preset.time}
+                      type="button"
+                      variant={formData.scheduledTime === preset.time ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => handleChange("scheduledTime", preset.time)}
+                    >
+                      {preset.label} ({preset.time})
+                    </Button>
+                  ))}
                 </div>
               </div>
 
@@ -489,6 +539,50 @@ export default function NewMatchPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Match Summary Preview */}
+          {((matchMode === "team" && formData.homeTeamId && formData.awayTeamId) ||
+            (matchMode === "project" && formData.homeProject && formData.awayProject)) && 
+            formData.scheduledDate && formData.scheduledTime && (
+            <Card className="border-primary/50 bg-primary/5">
+              <CardHeader className="p-3 lg:p-6 pb-2 lg:pb-2">
+                <CardTitle className="text-base lg:text-xl text-primary">Match Preview</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 lg:p-6 pt-0 lg:pt-0">
+                <div className="flex flex-col items-center text-center">
+                  <div className="flex items-center justify-center gap-4 text-lg lg:text-xl font-bold mb-2">
+                    {matchMode === "team" ? (
+                      <>
+                        <span>{teams.find(t => t.id === formData.homeTeamId)?.name || "Home"}</span>
+                        <span className="text-muted-foreground">vs</span>
+                        <span>{teams.find(t => t.id === formData.awayTeamId)?.name || "Away"}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{formData.homeProject}</span>
+                        <span className="text-muted-foreground">vs</span>
+                        <span>{formData.awayProject}</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p className="mb-1">
+                      {formData.matchType} • {formData.round} • {formData.overs} Overs
+                    </p>
+                    <p>
+                      📅 {new Date(formData.scheduledDate).toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        day: 'numeric', 
+                        month: 'short',
+                        year: 'numeric'
+                      })} at {formData.scheduledTime}
+                    </p>
+                    <p>📍 {formData.venue}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-2 lg:gap-4">
