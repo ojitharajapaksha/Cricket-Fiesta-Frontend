@@ -140,9 +140,13 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, token, user]);
 
-  // Generate QR code when playerInfo is loaded
+  // Generate QR code when playerInfo is loaded - for all users with traineeId
   useEffect(() => {
-    if (playerInfo?.traineeId && playerInfo?.foodRegistration && !playerInfo.foodRegistration.foodCollected) {
+    // Show QR code for all players/trainees with a traineeId
+    // They can collect food as long as they haven't collected it yet
+    const foodCollected = playerInfo?.foodRegistration?.foodCollected ?? false;
+    
+    if (playerInfo?.traineeId && !foodCollected) {
       // Generate QR code with trainee ID for food collection
       QRCode.toDataURL(playerInfo.traineeId, {
         width: 200,
@@ -491,6 +495,41 @@ export default function DashboardPage() {
                   
                   {/* QR Code for food collection */}
                   {!playerInfo.foodRegistration.foodCollected && qrCodeImage && (
+                    <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-primary/50 bg-primary/5 p-4">
+                      <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+                        <QrCode className="h-4 w-4" />
+                        Your Food Collection QR Code
+                      </div>
+                      <div className="rounded-lg bg-white p-2">
+                        <img 
+                          src={qrCodeImage} 
+                          alt="Food Collection QR Code" 
+                          className="h-40 w-40"
+                        />
+                      </div>
+                      <p className="mt-2 text-center text-xs text-muted-foreground">
+                        Show this QR code at the food counter to collect your meal
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : playerInfo?.traineeId ? (
+                // Player without specific food registration - still show QR for food collection
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                      <UtensilsCrossed className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-blue-600">Eligible for Food</p>
+                      <p className="text-xs text-muted-foreground lg:text-sm">
+                        Show your QR code at the food counter
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* QR Code for food collection */}
+                  {qrCodeImage && (
                     <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-primary/50 bg-primary/5 p-4">
                       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
                         <QrCode className="h-4 w-4" />
