@@ -25,7 +25,7 @@ export default function HomePage() {
               </div>
               <div>
                 <h1 className="text-base font-bold text-foreground lg:text-xl">Cricket Fiesta</h1>
-                <p className="text-[10px] text-muted-foreground lg:text-xs">SLT Trainees 2024</p>
+                <p className="text-[10px] text-muted-foreground lg:text-xs">SLT Trainees 2026</p>
               </div>
             </div>
             

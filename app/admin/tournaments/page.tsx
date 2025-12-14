@@ -240,7 +240,7 @@ export default function TournamentsPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      placeholder="e.g., Cricket Fiesta 2024"
+                      placeholder="e.g., Cricket Fiesta 2026"
                     />
                   </div>
 
