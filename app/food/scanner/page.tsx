@@ -38,6 +38,8 @@ interface ScanResult {
   preference: string
   message: string
   alreadyCollected?: boolean
+  isPlayer?: boolean
+  team?: string | null
 }
 
 // Player Food Status Component
@@ -275,22 +277,20 @@ function AdminScanner() {
     
     try {
       const token = localStorage.getItem("token")
-      const res = await fetch(`${API_URL}/api/food/registrations?traineeId=${encodeURIComponent(traineeId)}`, {
+      // Use the new lookup endpoint that checks both FoodRegistration and Player tables
+      const res = await fetch(`${API_URL}/api/food/lookup/${encodeURIComponent(traineeId)}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      if (!res.ok) throw new Error("Search failed")
-
-      const data = await res.json()
-      const reg = (data.data || []).find((r: any) =>
-        r.traineeId.toLowerCase() === traineeId.toLowerCase()
-      )
-
-      if (!reg) {
-        setScanResult({ success: false, name: "", traineeId, preference: "", message: "No registration found" })
+      if (!res.ok) {
+        const errorData = await res.json()
+        setScanResult({ success: false, name: "", traineeId, preference: "", message: errorData.message || "No registration found" })
         toast.error("No registration found for: " + traineeId)
         return
       }
+
+      const data = await res.json()
+      const reg = data.data
 
       if (reg.foodCollected) {
         setScanResult({
@@ -298,6 +298,8 @@ function AdminScanner() {
           preference: reg.foodPreference === "VEGETARIAN" ? "Veg" : "Non-Veg",
           message: `Already collected at ${new Date(reg.foodCollectedAt).toLocaleTimeString()}`,
           alreadyCollected: true,
+          isPlayer: reg.isPlayer,
+          team: reg.team
         })
         toast.warning("Food already collected!")
         return
@@ -306,8 +308,10 @@ function AdminScanner() {
       setScanResult({
         success: true, id: reg.id, name: reg.fullName, traineeId: reg.traineeId,
         preference: reg.foodPreference === "VEGETARIAN" ? "Veg" : "Non-Veg",
-        message: "Ready to collect",
+        message: reg.isPlayer ? `Player${reg.team ? ` - Team: ${reg.team}` : ''} - Ready to collect` : "Ready to collect",
         alreadyCollected: false,
+        isPlayer: reg.isPlayer,
+        team: reg.team
       })
       toast.success("Found: " + reg.fullName)
       
@@ -320,17 +324,18 @@ function AdminScanner() {
   }
 
   const handleConfirm = async () => {
-    if (!scanResult?.id) {
-      toast.error("No registration ID found")
+    if (!scanResult?.traineeId) {
+      toast.error("No trainee ID found")
       return
     }
 
     try {
       const token = localStorage.getItem("token")
-      console.log("Confirming collection for ID:", scanResult.id)
+      console.log("Confirming collection for traineeId:", scanResult.traineeId)
       
-      const res = await fetch(`${API_URL}/api/food/registrations/${scanResult.id}/collect`, {
-        method: "POST", // Backend uses POST not PUT
+      // Use the new collect-by-trainee endpoint that handles both players and trainees
+      const res = await fetch(`${API_URL}/api/food/collect-by-trainee/${encodeURIComponent(scanResult.traineeId)}`, {
+        method: "POST",
         headers: { 
           Authorization: `Bearer ${token}`, 
           "Content-Type": "application/json" 

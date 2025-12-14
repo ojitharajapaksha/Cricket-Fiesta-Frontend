@@ -2,9 +2,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trophy, Users, UtensilsCrossed, CalendarDays, Award, BarChart3, Home, UserCircle } from "lucide-react"
-import { CountdownTimer } from "@/components/countdown-timer"
 import { StatsSection } from "@/components/stats-section"
 import { AnnouncementPopup } from "@/components/announcement-popup"
+import { AnimatedHero } from "@/components/animated-hero"
 
 // Event starts on January 10th, 2026 at 9:00 AM Sri Lanka Time (UTC+5:30)
 const EVENT_DATE = new Date("2026-01-10T09:00:00+05:30")
@@ -76,45 +76,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-background via-accent to-background">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(22,163,74,0.1),transparent_50%)]" />
-        <div className="container relative mx-auto px-3 py-12 lg:px-4 lg:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs text-primary lg:mb-6 lg:gap-2 lg:px-4 lg:py-2 lg:text-sm">
-              <CalendarDays className="h-3 w-3 lg:h-4 lg:w-4" />
-              <span>Event Day: January 10, 2026 • 9:00 AM</span>
-            </div>
-            <h2 className="mb-4 text-balance text-2xl font-bold tracking-tight text-foreground sm:text-4xl lg:mb-6 lg:text-5xl xl:text-6xl">
-              Welcome to the SLT Trainees Cricket Fiesta
-            </h2>
-            <p className="mb-6 text-balance text-sm leading-relaxed text-muted-foreground sm:text-base lg:mb-8 lg:text-xl">
-              Comprehensive event management system for 200+ participants. Handle registrations, food distribution,
-              match scheduling, and live scoring all in one place.
-            </p>
-            
-            {/* Countdown Timer */}
-            <div className="mb-6 lg:mb-8">
-              <CountdownTimer targetDate={EVENT_DATE} eventName="Cricket Fiesta 2026" />
-            </div>
-            
-            <div className="flex flex-wrap items-center justify-center gap-3 lg:gap-4">
-              <a href="https://linktr.ee/CricketFiestaRegistrationLinks" target="_blank" rel="noopener noreferrer">
-                <Button size="sm" className="gap-1.5 text-xs lg:gap-2 lg:text-sm">
-                  <Users className="h-4 w-4 lg:h-5 lg:w-5" />
-                  Register Now
-                </Button>
-              </a>
-              <Link href="/login">
-                <Button size="sm" variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm">
-                  <Trophy className="h-4 w-4 lg:h-5 lg:w-5" />
-                  Live Scores
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Animated Hero Section */}
+      <AnimatedHero eventDate={EVENT_DATE} />
 
       {/* Features Grid */}
       <section className="container mx-auto px-3 py-8 lg:px-4 lg:py-16">

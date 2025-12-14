@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
@@ -19,6 +19,7 @@ interface Player {
   battingStyle: string | null
   bowlingStyle: string | null
   experienceLevel: string
+  profileImage: string | null
   team: {
     id: string
     name: string
@@ -275,6 +276,7 @@ export default function PlayersPublicPage() {
                 <Card key={player.id} className="group overflow-hidden transition-all hover:shadow-lg hover:border-primary/50">
                   <CardContent className="p-5 text-center">
                     <Avatar className="mx-auto h-20 w-20 ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
+                      <AvatarImage src={player.profileImage || undefined} alt={player.fullName} />
                       <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
                         {getInitials(player.fullName)}
                       </AvatarFallback>

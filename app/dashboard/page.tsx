@@ -25,6 +25,7 @@ import QRCode from "qrcode"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
+import { ProfileImageUpload } from "@/components/profile-image-upload"
 
 interface UserData {
   id: string;
@@ -83,6 +84,8 @@ interface PlayerInfo {
   fullName: string;
   email: string;
   department: string;
+  profileImage?: string;
+  position?: string;
   team?: {
     id: string;
     name: string;
@@ -105,6 +108,16 @@ interface UpcomingMatch {
   status: string;
 }
 
+interface CommitteeInfo {
+  id: string;
+  fullName: string;
+  role: string | null;
+  imageUrl: string | null;
+  department: string;
+  email: string | null;
+  assignedTeam: string | null;
+}
+
 const departmentColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f97316", "#ec4899", "#14b8a6", "#eab308", "#06b6d4"];
 
 export default function DashboardPage() {
@@ -116,6 +129,7 @@ export default function DashboardPage() {
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
   const [foodData, setFoodData] = useState<FoodPreference[]>([]);
   const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
+  const [committeeInfo, setCommitteeInfo] = useState<CommitteeInfo | null>(null);
   const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [qrCodeImage, setQrCodeImage] = useState<string>('');
@@ -270,6 +284,23 @@ export default function DashboardPage() {
         const foodResData = await foodRes.json();
         setFoodData(foodResData.data);
       }
+
+      // Fetch committee info if user is an OC member (ADMIN role)
+      if (user?.role === 'ADMIN' && user?.email) {
+        try {
+          const committeeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/committee`, { headers });
+          if (committeeRes.ok) {
+            const committeeData = await committeeRes.json();
+            const members = committeeData.data || [];
+            const myInfo = members.find((m: any) => m.email?.toLowerCase() === user.email.toLowerCase());
+            if (myInfo) {
+              setCommitteeInfo(myInfo);
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching committee info:', e);
+        }
+      }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -404,44 +435,72 @@ export default function DashboardPage() {
                 <CardTitle className="text-base lg:text-xl">Your Profile</CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground lg:text-sm">Trainee ID</p>
-                    <p className="text-sm font-medium lg:text-base">{playerInfo.traineeId}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground lg:text-sm">Department</p>
-                    <p className="text-sm font-medium lg:text-base">{playerInfo.department}</p>
-                  </div>
-                  {/* Project Name */}
-                  <div>
-                    <p className="text-xs text-muted-foreground lg:text-sm">Project</p>
-                    {user?.projectName ? (
-                      <p className="text-sm font-medium lg:text-base">{user.projectName}</p>
-                    ) : (
-                      <Button 
-                        variant="link" 
-                        className="h-auto p-0 text-sm text-primary underline"
-                        onClick={() => setShowProjectNameModal(true)}
-                      >
-                        Add Project Name
-                      </Button>
+                <div className="flex flex-col sm:flex-row gap-6">
+                  {/* Profile Image Upload - Only for players, not trainees */}
+                  {!isTraineeOnly && (
+                    <div className="flex flex-col items-center gap-2">
+                      <ProfileImageUpload
+                        currentImage={playerInfo.profileImage}
+                        name={playerInfo.fullName}
+                        email={playerInfo.email}
+                        userType="player"
+                        onImageUpdated={(imageUrl) => {
+                          setPlayerInfo({ ...playerInfo, profileImage: imageUrl })
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">Click to change</p>
+                    </div>
+                  )}
+                  
+                  {/* Profile Details */}
+                  <div className="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground lg:text-sm">Trainee ID</p>
+                      <p className="text-sm font-medium lg:text-base">{playerInfo.traineeId}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground lg:text-sm">Department</p>
+                      <p className="text-sm font-medium lg:text-base">{playerInfo.department}</p>
+                    </div>
+                    {/* Project Name */}
+                    <div>
+                      <p className="text-xs text-muted-foreground lg:text-sm">Project</p>
+                      {user?.projectName ? (
+                        <p className="text-sm font-medium lg:text-base">{user.projectName}</p>
+                      ) : (
+                        <Button 
+                          variant="link" 
+                          className="h-auto p-0 text-sm text-primary underline"
+                          onClick={() => setShowProjectNameModal(true)}
+                        >
+                          Add Project Name
+                        </Button>
+                      )}
+                    </div>
+                    {/* Position - Only for players */}
+                    {!isTraineeOnly && playerInfo.position && (
+                      <div>
+                        <p className="text-xs text-muted-foreground lg:text-sm">Position</p>
+                        <p className="text-sm font-medium lg:text-base capitalize">
+                          {playerInfo.position.replace('_', ' ').toLowerCase()}
+                        </p>
+                      </div>
                     )}
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground lg:text-sm">{isTraineeOnly ? 'Status' : 'Team'}</p>
-                    {isTraineeOnly ? (
-                      <Badge className="mt-1 bg-purple-500 text-white text-xs">Trainee</Badge>
-                    ) : playerInfo.team ? (
-                      <Badge 
-                        className="mt-1 text-xs"
-                        style={{ backgroundColor: playerInfo.team.color, color: '#fff' }}
-                      >
-                        {playerInfo.team.name}
-                      </Badge>
-                    ) : (
-                      <p className="text-sm font-medium text-muted-foreground lg:text-base">Not assigned yet</p>
-                    )}
+                    <div>
+                      <p className="text-xs text-muted-foreground lg:text-sm">{isTraineeOnly ? 'Status' : 'Team'}</p>
+                      {isTraineeOnly ? (
+                        <Badge className="mt-1 bg-purple-500 text-white text-xs">Trainee</Badge>
+                      ) : playerInfo.team ? (
+                        <Badge 
+                          className="mt-1 text-xs"
+                          style={{ backgroundColor: playerInfo.team.color, color: '#fff' }}
+                        >
+                          {playerInfo.team.name}
+                        </Badge>
+                      ) : (
+                        <p className="text-sm font-medium text-muted-foreground lg:text-base">Not assigned yet</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -634,6 +693,57 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* OC Member Profile Card - Only shown for ADMIN (OC members) */}
+        {user?.role === 'ADMIN' && committeeInfo && (
+          <Card className="mb-4 lg:mb-6">
+            <CardHeader className="p-4 lg:p-6">
+              <CardTitle className="text-base lg:text-xl">Your OC Profile</CardTitle>
+              <CardDescription className="text-xs lg:text-sm">Update your profile picture to display on the public OC Members page</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+              <div className="flex flex-col sm:flex-row gap-6">
+                {/* Profile Image Upload */}
+                <div className="flex flex-col items-center gap-2">
+                  <ProfileImageUpload
+                    currentImage={committeeInfo.imageUrl}
+                    name={committeeInfo.fullName}
+                    email={committeeInfo.email || user.email}
+                    userType="committee"
+                    onImageUpdated={(imageUrl) => {
+                      setCommitteeInfo({ ...committeeInfo, imageUrl })
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">Click to change</p>
+                </div>
+                
+                {/* Profile Details */}
+                <div className="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground lg:text-sm">Name</p>
+                    <p className="text-sm font-medium lg:text-base">{committeeInfo.fullName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground lg:text-sm">Department</p>
+                    <p className="text-sm font-medium lg:text-base">{committeeInfo.department}</p>
+                  </div>
+                  {committeeInfo.role && (
+                    <div>
+                      <p className="text-xs text-muted-foreground lg:text-sm">Role</p>
+                      <p className="text-sm font-medium lg:text-base">{committeeInfo.role}</p>
+                    </div>
+                  )}
+                  {committeeInfo.assignedTeam && (
+                    <div>
+                      <p className="text-xs text-muted-foreground lg:text-sm">Assigned Team</p>
+                      <Badge className="mt-1 text-xs">{committeeInfo.assignedTeam}</Badge>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Key Metrics */}
         <div className="mb-4 grid grid-cols-2 gap-3 lg:mb-6 lg:grid-cols-4 lg:gap-4">
