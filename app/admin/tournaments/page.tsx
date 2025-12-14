@@ -207,22 +207,22 @@ export default function TournamentsPage() {
 
   return (
     <ProtectedRoute requiredRoles={["SUPER_ADMIN"]}>
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto px-3 py-4 space-y-4 sm:px-4 sm:py-6 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Tournament Management</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">Tournament Management</h1>
+            <p className="text-sm text-muted-foreground sm:text-base">
               Create and manage cricket tournaments and leagues
             </p>
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button size="sm" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Tournament
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Tournament</DialogTitle>
                 <DialogDescription>
@@ -230,7 +230,7 @@ export default function TournamentsPage() {
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateTournament} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                   <div className="space-y-2 col-span-2">
                     <Label htmlFor="name">Tournament Name *</Label>
                     <Input
@@ -397,7 +397,7 @@ export default function TournamentsPage() {
                     />
                   </div>
 
-                  <div className="space-y-2 col-span-2">
+                  <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="rules">Rules (JSON format)</Label>
                     <Textarea
                       id="rules"
@@ -441,27 +441,27 @@ export default function TournamentsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {tournaments.map((tournament) => (
               <Card key={tournament.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="flex items-center gap-2">
-                        <Trophy className="h-5 w-5" />
-                        {tournament.name}
+                <CardHeader className="p-3 sm:p-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Trophy className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                        <span className="truncate">{tournament.name}</span>
                       </CardTitle>
-                      <CardDescription className="mt-2">
+                      <CardDescription className="mt-1 sm:mt-2 text-xs sm:text-sm line-clamp-2">
                         {tournament.description || "No description"}
                       </CardDescription>
                     </div>
-                    <Badge className={getStatusColor(tournament.status)}>
+                    <Badge className={`${getStatusColor(tournament.status)} text-xs flex-shrink-0`}>
                       {tournament.status}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                <CardContent className="space-y-3 p-3 pt-0 sm:space-y-4 sm:p-6 sm:pt-0">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
                       <Trophy className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">
@@ -486,7 +486,7 @@ export default function TournamentsPage() {
                     </div>
                   </div>
 
-                  <div className="text-sm">
+                  <div className="text-xs sm:text-sm">
                     <p className="text-muted-foreground">
                       {new Date(tournament.startDate).toLocaleDateString()} -{" "}
                       {new Date(tournament.endDate).toLocaleDateString()}
@@ -494,7 +494,7 @@ export default function TournamentsPage() {
                   </div>
 
                   {tournament.prizePool && (
-                    <div className="text-sm font-medium">
+                    <div className="text-xs sm:text-sm font-medium">
                       Prize Pool: LKR {tournament.prizePool.toLocaleString()}
                     </div>
                   )}
@@ -503,7 +503,7 @@ export default function TournamentsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 text-xs sm:text-sm"
                       onClick={() => router.push(`/admin/tournaments/${tournament.id}`)}
                     >
                       View Details

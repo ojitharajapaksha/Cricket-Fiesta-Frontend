@@ -208,20 +208,20 @@ function BudgetManagementContent() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-3 py-4 space-y-4 sm:px-4 sm:py-6 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Budget Management</h1>
-          <p className="text-muted-foreground mt-2">Manage event budget and track expenses</p>
+          <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">Budget Management</h1>
+          <p className="text-sm text-muted-foreground mt-1 sm:mt-2 sm:text-base">Manage event budget and track expenses</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button size="sm" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Budget Category
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Add Budget Category</DialogTitle>
               <DialogDescription>Create a new budget category for the event</DialogDescription>
@@ -283,35 +283,35 @@ function BudgetManagementContent() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Allocated</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Allocated</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.totalAllocated)}</div>
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{formatCurrency(summary.totalAllocated)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Spent</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.totalSpent)}</div>
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{formatCurrency(summary.totalSpent)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {((summary.totalSpent / summary.totalAllocated) * 100).toFixed(1)}% of total budget
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Remaining</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Remaining</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${summary.totalRemaining < 0 ? 'text-red-500' : ''}`}>
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className={`text-lg sm:text-2xl font-bold ${summary.totalRemaining < 0 ? 'text-red-500' : ''}`}>
               {formatCurrency(summary.totalRemaining)}
             </div>
           </CardContent>
@@ -320,11 +320,79 @@ function BudgetManagementContent() {
 
       {/* Budget Categories */}
       <Card>
-        <CardHeader>
-          <CardTitle>Budget Categories</CardTitle>
-          <CardDescription>{budgets.length} categories with detailed expense tracking</CardDescription>
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Budget Categories</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">{budgets.length} categories with detailed expense tracking</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 sm:pt-0">
+          {/* Mobile Cards View */}
+          <div className="block sm:hidden space-y-3 p-3">
+            {budgets.map((budget) => {
+              const percentage = (budget.spent / budget.allocated) * 100;
+              return (
+                <Card key={budget.id} className="p-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-medium text-sm">{budget.category}</p>
+                      {budget.description && (
+                        <p className="text-xs text-muted-foreground">{budget.description}</p>
+                      )}
+                    </div>
+                    <Badge className={getStatusColor(budget.status)} >
+                      {budget.status}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs mb-2">
+                    <div>
+                      <p className="text-muted-foreground">Allocated</p>
+                      <p className="font-medium">{formatCurrency(budget.allocated)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Spent</p>
+                      <p className="font-medium">{formatCurrency(budget.spent)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Remaining</p>
+                      <p className={`font-medium ${budget.remaining < 0 ? 'text-red-500' : ''}`}>{formatCurrency(budget.remaining)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${percentage > 100 ? 'bg-red-500' : 'bg-green-500'}`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs">{percentage.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-xs"
+                      onClick={() => {
+                        setSelectedBudget(budget);
+                        setIsExpenseDialogOpen(true);
+                      }}
+                    >
+                      <Receipt className="h-3 w-3 mr-1" />
+                      Add Expense
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteBudget(budget.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -394,12 +462,13 @@ function BudgetManagementContent() {
               })}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Add Expense Dialog */}
       <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Expense</DialogTitle>
             <DialogDescription>

@@ -25,8 +25,8 @@ interface Match {
 }
 
 export default function MatchesPage() {
-  // Auth check - redirects to login if not authenticated
-  const { loading: authLoading, isAuthenticated, isSuperAdmin, isOC, token } = useAuth('ADMIN_OR_SUPER')
+  // Auth check - allow all authenticated users to view
+  const { loading: authLoading, isAuthenticated, isSuperAdmin, isOC, token } = useAuth()
   
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,22 +90,28 @@ export default function MatchesPage() {
         {/* Header */}
         <div className="mb-4 flex flex-col gap-3 lg:mb-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">Match Management</h1>
-            <p className="text-xs text-muted-foreground lg:text-base">Schedule matches and manage live scoring</p>
+            <h1 className="mb-1 text-xl font-bold text-foreground lg:mb-2 lg:text-3xl">
+              {(isSuperAdmin || isOC) ? 'Match Management' : 'Matches'}
+            </h1>
+            <p className="text-xs text-muted-foreground lg:text-base">
+              {(isSuperAdmin || isOC) ? 'Schedule matches and manage live scoring' : 'View all matches and scores'}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
-              <span className="hidden sm:inline">Generate Fixtures</span>
-              <span className="sm:hidden">Fixtures</span>
-            </Button>
-            <Link href="/matches/new">
-              <Button className="gap-2 text-xs lg:text-sm" size="sm">
-                <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Create Match</span>
-                <span className="sm:hidden">Create</span>
+          {(isSuperAdmin || isOC) && (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
+                <span className="hidden sm:inline">Generate Fixtures</span>
+                <span className="sm:hidden">Fixtures</span>
               </Button>
-            </Link>
-          </div>
+              <Link href="/matches/new">
+                <Button className="gap-2 text-xs lg:text-sm" size="sm">
+                  <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Create Match</span>
+                  <span className="sm:hidden">Create</span>
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -236,7 +242,7 @@ export default function MatchesPage() {
 
                     {/* Actions */}
                     <div className="flex gap-2 lg:w-40 lg:flex-col">
-                      {match.status === "SCHEDULED" && (
+                      {(isSuperAdmin || isOC) && match.status === "SCHEDULED" && (
                         <Link href={`/matches/${match.id}/scoring`} className="flex-1 lg:flex-none">
                           <Button className="w-full gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
                             <Play className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -244,7 +250,7 @@ export default function MatchesPage() {
                           </Button>
                         </Link>
                       )}
-                      {match.status === "LIVE" && (
+                      {(isSuperAdmin || isOC) && match.status === "LIVE" && (
                         <Link href={`/matches/${match.id}/scoring`} className="flex-1 lg:flex-none">
                           <Button className="w-full gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" variant="outline" size="sm">
                             Live Scoring
@@ -253,7 +259,7 @@ export default function MatchesPage() {
                       )}
                       <Link href={`/matches/${match.id}`} className="flex-1 lg:flex-none">
                         <Button className="w-full bg-transparent text-xs lg:text-sm" variant="outline" size="sm">
-                          Details
+                          {match.status === "LIVE" ? "Watch Live" : "Details"}
                         </Button>
                       </Link>
                     </div>

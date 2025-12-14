@@ -34,8 +34,8 @@ interface Team {
 }
 
 export default function TeamsPage() {
-  // Auth check - redirects to login if not authenticated
-  const { loading: authLoading, isAuthenticated, isSuperAdmin, isOC, token } = useAuth('ADMIN_OR_SUPER')
+  // Auth check - allow all authenticated users to view
+  const { loading: authLoading, isAuthenticated, isSuperAdmin, isOC, token } = useAuth()
   
   const [teams, setTeams] = useState<Team[]>([])
   const [totalRegisteredPlayers, setTotalRegisteredPlayers] = useState(0)

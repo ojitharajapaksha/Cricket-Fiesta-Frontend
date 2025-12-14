@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck, QrCode, Building2 } from "lucide-react"
+import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck, QrCode, Building2, ExternalLink, Gamepad2, UserCircle, ChevronRight } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -418,23 +418,35 @@ export default function DashboardPage() {
       <ResponsiveLayout>
         <ProjectNameModal />
         <div className="container mx-auto p-4 lg:p-6">
-          {/* Header */}
+          {/* Header with Welcome Banner */}
           <div className="mb-4 lg:mb-6">
-            <h1 className="mb-1 text-2xl font-bold text-foreground lg:mb-2 lg:text-3xl">
-              Welcome, {displayName}!
-            </h1>
-            <p className="text-sm text-muted-foreground lg:text-base">
-              Cricket Fiesta 2026 - Your event dashboard
-            </p>
+            <div className="rounded-xl bg-gradient-to-r from-primary/20 via-primary/10 to-purple-500/20 p-4 lg:p-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 shadow-md lg:h-16 lg:w-16">
+                  <UserCircle className="h-8 w-8 text-primary lg:h-10 lg:w-10" />
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-xl font-bold text-foreground lg:text-2xl">
+                    Welcome, {displayName}!
+                  </h1>
+                  <p className="text-sm text-muted-foreground lg:text-base">
+                    Cricket Fiesta 2026 • {isTraineeOnly ? 'Trainee' : playerInfo?.team?.name || 'Player'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Player Info Card */}
+          {/* Profile Card */}
           {playerInfo && (
-            <Card className="mb-4 lg:mb-6">
-              <CardHeader className="p-4 lg:p-6">
-                <CardTitle className="text-base lg:text-xl">Your Profile</CardTitle>
+            <Card className="mb-4 lg:mb-6 overflow-hidden">
+              <CardHeader className="p-4 lg:p-6 bg-gradient-to-r from-blue-500/5 to-cyan-500/5">
+                <div className="flex items-center gap-2">
+                  <UserCircle className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-base lg:text-xl">Your Profile</CardTitle>
+                </div>
               </CardHeader>
-              <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+              <CardContent className="p-4 pt-4 lg:p-6 lg:pt-4">
                 <div className="flex flex-col sm:flex-row gap-6">
                   {/* Profile Image Upload - Only for players, not trainees */}
                   {!isTraineeOnly && (
@@ -454,19 +466,19 @@ export default function DashboardPage() {
                   
                   {/* Profile Details */}
                   <div className="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div>
+                    <div className="rounded-lg bg-muted/50 p-3">
                       <p className="text-xs text-muted-foreground lg:text-sm">Trainee ID</p>
-                      <p className="text-sm font-medium lg:text-base">{playerInfo.traineeId}</p>
+                      <p className="text-sm font-semibold lg:text-base">{playerInfo.traineeId}</p>
                     </div>
-                    <div>
+                    <div className="rounded-lg bg-muted/50 p-3">
                       <p className="text-xs text-muted-foreground lg:text-sm">Department</p>
-                      <p className="text-sm font-medium lg:text-base">{playerInfo.department}</p>
+                      <p className="text-sm font-semibold lg:text-base">{playerInfo.department}</p>
                     </div>
                     {/* Project Name */}
-                    <div>
+                    <div className="rounded-lg bg-muted/50 p-3">
                       <p className="text-xs text-muted-foreground lg:text-sm">Project</p>
                       {user?.projectName ? (
-                        <p className="text-sm font-medium lg:text-base">{user.projectName}</p>
+                        <p className="text-sm font-semibold lg:text-base">{user.projectName}</p>
                       ) : (
                         <Button 
                           variant="link" 
@@ -479,14 +491,14 @@ export default function DashboardPage() {
                     </div>
                     {/* Position - Only for players */}
                     {!isTraineeOnly && playerInfo.position && (
-                      <div>
+                      <div className="rounded-lg bg-muted/50 p-3">
                         <p className="text-xs text-muted-foreground lg:text-sm">Position</p>
-                        <p className="text-sm font-medium lg:text-base capitalize">
+                        <p className="text-sm font-semibold lg:text-base capitalize">
                           {playerInfo.position.replace('_', ' ').toLowerCase()}
                         </p>
                       </div>
                     )}
-                    <div>
+                    <div className="rounded-lg bg-muted/50 p-3">
                       <p className="text-xs text-muted-foreground lg:text-sm">{isTraineeOnly ? 'Status' : 'Team'}</p>
                       {isTraineeOnly ? (
                         <Badge className="mt-1 bg-purple-500 text-white text-xs">Trainee</Badge>
@@ -498,7 +510,7 @@ export default function DashboardPage() {
                           {playerInfo.team.name}
                         </Badge>
                       ) : (
-                        <p className="text-sm font-medium text-muted-foreground lg:text-base">Not assigned yet</p>
+                        <p className="text-sm font-semibold text-muted-foreground lg:text-base">Not assigned yet</p>
                       )}
                     </div>
                   </div>
@@ -508,14 +520,14 @@ export default function DashboardPage() {
           )}
 
           {/* Food Status Card */}
-          <Card className="mb-4 lg:mb-6">
-            <CardHeader className="p-4 lg:p-6">
-              <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
-                <UtensilsCrossed className="h-4 w-4 lg:h-5 lg:w-5" />
-                Food Status
-              </CardTitle>
+          <Card className="mb-4 lg:mb-6 overflow-hidden">
+            <CardHeader className="p-4 lg:p-6 bg-gradient-to-r from-orange-500/5 to-amber-500/5">
+              <div className="flex items-center gap-2">
+                <UtensilsCrossed className="h-5 w-5 text-orange-500" />
+                <CardTitle className="text-base lg:text-xl">Food Status</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+            <CardContent className="p-4 pt-4 lg:p-6 lg:pt-4">
               {playerInfo?.foodRegistration ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -617,14 +629,14 @@ export default function DashboardPage() {
           </Card>
 
           {/* Upcoming Matches */}
-          <Card className="mb-4 lg:mb-6">
-            <CardHeader className="p-4 lg:p-6">
-              <CardTitle className="flex items-center gap-2 text-base lg:text-xl">
-                <Trophy className="h-4 w-4 lg:h-5 lg:w-5" />
-                Upcoming Matches
-              </CardTitle>
+          <Card className="mb-4 lg:mb-6 overflow-hidden">
+            <CardHeader className="p-4 lg:p-6 bg-gradient-to-r from-green-500/5 to-emerald-500/5">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-green-500" />
+                <CardTitle className="text-base lg:text-xl">Upcoming Matches</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
+            <CardContent className="p-4 pt-4 lg:p-6 lg:pt-4">
               {upcomingMatches.length > 0 ? (
                 <div className="space-y-3">
                   {upcomingMatches.map((match) => (
@@ -655,20 +667,65 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="p-4 lg:p-6">
               <CardTitle className="text-base lg:text-xl">Quick Links</CardTitle>
+              <CardDescription className="text-xs lg:text-sm">Explore the event</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <Link href="/matches">
-                  <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" size="sm">
-                    <Trophy className="h-4 w-4" />
-                    View Matches
-                  </Button>
+                  <div className="group flex items-center justify-between rounded-lg border border-border bg-gradient-to-r from-orange-500/10 to-amber-500/10 p-3 transition-all hover:border-orange-500/50 hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/20">
+                        <Trophy className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Matches</p>
+                        <p className="text-xs text-muted-foreground">View live & upcoming</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                  </div>
+                </Link>
+                <Link href="/all-players">
+                  <div className="group flex items-center justify-between rounded-lg border border-border bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-3 transition-all hover:border-blue-500/50 hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
+                        <Users className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Players</p>
+                        <p className="text-xs text-muted-foreground">View all players</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                  </div>
                 </Link>
                 <Link href="/teams">
-                  <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-xs lg:text-sm" size="sm">
-                    <Users className="h-4 w-4" />
-                    View Teams
-                  </Button>
+                  <div className="group flex items-center justify-between rounded-lg border border-border bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-3 transition-all hover:border-green-500/50 hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
+                        <Gamepad2 className="h-5 w-5 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Teams</p>
+                        <p className="text-xs text-muted-foreground">View all teams</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                  </div>
+                </Link>
+                <Link href="/oc-members">
+                  <div className="group flex items-center justify-between rounded-lg border border-border bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-3 transition-all hover:border-purple-500/50 hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/20">
+                        <Award className="h-5 w-5 text-purple-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">OC Members</p>
+                        <p className="text-xs text-muted-foreground">View organizing committee</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                  </div>
                 </Link>
               </div>
             </CardContent>
