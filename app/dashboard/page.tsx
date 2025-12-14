@@ -142,8 +142,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isAuthenticated || !token || !user) return;
     
-    // Check if player/trainee needs to enter project name
-    if (user.role === 'USER' && !user.projectName) {
+    // Check if player needs to enter project name (NOT for food-only trainees)
+    // Only ask players (userType === 'player') for project name
+    if (user.role === 'USER' && !user.projectName && user.userType === 'player') {
       setShowProjectNameModal(true);
     }
     
