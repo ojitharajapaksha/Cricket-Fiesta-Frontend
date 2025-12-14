@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, UserCheck, Loader2, RefreshCw, Building2 } from "lucide-react"
+import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, UserCheck, Loader2, RefreshCw, Building2, ShieldCheck, ShieldX } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -26,6 +26,7 @@ interface Player {
   attended: boolean;
   attendedAt: string | null;
   projectName: string | null;
+  isApproved: boolean;
   team: {
     id: string;
     name: string;
@@ -134,6 +135,27 @@ export default function PlayersPage() {
     toast.success("Data refreshed");
   }
 
+  const handleToggleApproval = async (playerId: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/players/${playerId}/approve`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isApproved: !currentStatus }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update approval status");
+
+      toast.success(`Player ${!currentStatus ? 'approved' : 'removed from'} public page`);
+      fetchPlayers();
+    } catch (error: any) {
+      console.error("Error updating approval:", error);
+      toast.error(error.message || "Failed to update approval status");
+    }
+  }
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -159,6 +181,7 @@ export default function PlayersPage() {
 
   const attendedCount = players.filter((p) => p.attended).length
   const unassignedCount = players.filter((p) => !p.teamId && !p.team).length
+  const approvedCount = players.filter((p) => p.isApproved).length
 
   if (loading) {
     return (
@@ -214,7 +237,7 @@ export default function PlayersPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="mb-4 grid grid-cols-2 gap-2 lg:mb-6 lg:grid-cols-5 lg:gap-4">
+        <div className="mb-4 grid grid-cols-2 gap-2 lg:mb-6 lg:grid-cols-6 lg:gap-4">
           <Card>
             <CardHeader className="p-3 pb-1 lg:pb-3">
               <CardTitle className="text-[10px] font-medium text-muted-foreground lg:text-sm">Total Players</CardTitle>
@@ -253,6 +276,14 @@ export default function PlayersPage() {
             </CardHeader>
             <CardContent className="p-3 pt-0">
               <div className="text-lg font-bold lg:text-2xl">{unassignedCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-green-500/50 bg-green-500/5">
+            <CardHeader className="p-3 pb-1 lg:pb-3">
+              <CardTitle className="text-[10px] font-medium text-green-600 lg:text-sm">Public Page</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold text-green-600 lg:text-2xl">{approvedCount}</div>
             </CardContent>
           </Card>
         </div>
@@ -302,16 +333,16 @@ export default function PlayersPage() {
                   <TableHead>Department</TableHead>
                   <TableHead>Project</TableHead>
                   <TableHead>Position</TableHead>
-                  <TableHead>Experience</TableHead>
                   <TableHead>Team</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Public</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPlayers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center text-muted-foreground">
                       No players found
                     </TableCell>
                   </TableRow>
@@ -331,7 +362,6 @@ export default function PlayersPage() {
                       <TableCell>
                         <Badge variant="outline">{player.position}</Badge>
                       </TableCell>
-                      <TableCell>{player.experienceLevel}</TableCell>
                       <TableCell>
                         {player.team && player.team.shortName ? (
                           <Badge>{player.team.shortName}</Badge>
@@ -347,6 +377,32 @@ export default function PlayersPage() {
                           </Badge>
                         ) : (
                           <Badge variant="secondary">Pending</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isSuperAdmin ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={player.isApproved ? "text-green-600 hover:text-green-700" : "text-muted-foreground hover:text-foreground"}
+                            onClick={() => handleToggleApproval(player.id, player.isApproved)}
+                            title={player.isApproved ? "Click to remove from public page" : "Click to approve for public page"}
+                          >
+                            {player.isApproved ? (
+                              <ShieldCheck className="h-5 w-5" />
+                            ) : (
+                              <ShieldX className="h-5 w-5" />
+                            )}
+                          </Button>
+                        ) : (
+                          player.isApproved ? (
+                            <Badge className="bg-green-500/10 text-green-500">
+                              <ShieldCheck className="mr-1 h-3 w-3" />
+                              Public
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">Private</Badge>
+                          )
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -369,6 +425,24 @@ export default function PlayersPage() {
                               <DropdownMenuItem onClick={() => handleMarkAttendance(player.id)}>
                                 <UserCheck className="mr-2 h-4 w-4" />
                                 Mark Attendance
+                              </DropdownMenuItem>
+                            )}
+                            {isSuperAdmin && (
+                              <DropdownMenuItem 
+                                onClick={() => handleToggleApproval(player.id, player.isApproved)}
+                                className={player.isApproved ? "text-orange-600" : "text-green-600"}
+                              >
+                                {player.isApproved ? (
+                                  <>
+                                    <ShieldX className="mr-2 h-4 w-4" />
+                                    Remove from Public
+                                  </>
+                                ) : (
+                                  <>
+                                    <ShieldCheck className="mr-2 h-4 w-4" />
+                                    Approve for Public
+                                  </>
+                                )}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem className="text-destructive">
@@ -396,11 +470,16 @@ export default function PlayersPage() {
             </Card>
           ) : (
             filteredPlayers.map((player) => (
-              <Card key={player.id}>
+              <Card key={player.id} className={player.isApproved ? "border-green-500/30" : ""}>
                 <CardContent className="p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="truncate text-sm font-semibold">{player.fullName}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="truncate text-sm font-semibold">{player.fullName}</h3>
+                        {player.isApproved && (
+                          <ShieldCheck className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">{player.department}</p>
                       {player.projectName && (
                         <p className="text-xs text-primary mt-0.5">📁 {player.projectName}</p>
@@ -419,6 +498,11 @@ export default function PlayersPage() {
                           </Badge>
                         ) : (
                           <Badge variant="secondary" className="text-[10px]">Pending</Badge>
+                        )}
+                        {player.isApproved && (
+                          <Badge className="bg-green-500/10 text-green-600 text-[10px]">
+                            Public
+                          </Badge>
                         )}
                       </div>
                     </div>
@@ -441,6 +525,24 @@ export default function PlayersPage() {
                           <DropdownMenuItem onClick={() => handleMarkAttendance(player.id)}>
                             <UserCheck className="mr-2 h-4 w-4" />
                             Mark Attendance
+                          </DropdownMenuItem>
+                        )}
+                        {isSuperAdmin && (
+                          <DropdownMenuItem 
+                            onClick={() => handleToggleApproval(player.id, player.isApproved)}
+                            className={player.isApproved ? "text-orange-600" : "text-green-600"}
+                          >
+                            {player.isApproved ? (
+                              <>
+                                <ShieldX className="mr-2 h-4 w-4" />
+                                Remove from Public
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                Approve for Public
+                              </>
+                            )}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem className="text-destructive">
