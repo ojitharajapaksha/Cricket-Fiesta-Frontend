@@ -19,11 +19,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 interface CommitteeMember {
   id: string
   fullName: string
+  role?: string
+  roleOrder: number
   department: string
   whatsappNumber: string
   email?: string
   assignedTeam?: string
   experienceLevel: string
+  isApproved: boolean
   checkedIn: boolean
   checkInTime?: string
   checkOutTime?: string
@@ -313,19 +316,20 @@ export default function CommitteePage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Order</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>WhatsApp</TableHead>
                   <TableHead>Assigned Team</TableHead>
-                  <TableHead>Experience</TableHead>
+                  {isSuperAdmin && <TableHead>Approved</TableHead>}
                   <TableHead>Status</TableHead>
-                  <TableHead>Check-in Time</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMembers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={isSuperAdmin ? 10 : 9} className="text-center text-muted-foreground">
                       No committee members found
                     </TableCell>
                   </TableRow>
@@ -333,6 +337,16 @@ export default function CommitteePage() {
                   filteredMembers.map((member) => (
                     <TableRow key={member.id}>
                       <TableCell className="font-medium">{member.fullName}</TableCell>
+                      <TableCell>
+                        {member.role ? (
+                          <Badge variant="outline">{member.role}</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{member.roleOrder}</Badge>
+                      </TableCell>
                       <TableCell>{member.department}</TableCell>
                       <TableCell>
                         <code className="text-xs">{member.whatsappNumber}</code>
@@ -344,11 +358,15 @@ export default function CommitteePage() {
                           <Badge variant="secondary">Unassigned</Badge>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={member.experienceLevel === "EXTENSIVE" ? "default" : "secondary"}>
-                          {member.experienceLevel === "EXTENSIVE" ? "Extensive" : member.experienceLevel === "SOME" ? "Some" : "None"}
-                        </Badge>
-                      </TableCell>
+                      {isSuperAdmin && (
+                        <TableCell>
+                          {member.isApproved ? (
+                            <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Approved</Badge>
+                          ) : (
+                            <Badge variant="secondary">Pending</Badge>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         {member.checkedIn ? (
                           <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Checked In</Badge>

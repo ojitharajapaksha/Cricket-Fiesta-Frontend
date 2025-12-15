@@ -13,6 +13,7 @@ interface CommitteeMember {
   id: string
   fullName: string
   role: string | null
+  roleOrder: number
   imageUrl: string | null
   department: string
 }
@@ -171,19 +172,21 @@ export default function OCMembersPage() {
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
               {members.map((member) => (
                 <Card key={member.id} className="group overflow-hidden transition-all hover:shadow-lg hover:border-primary/50">
-                  <CardContent className="p-6 text-center">
-                    <Avatar className="mx-auto h-24 w-24 ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
+                  <CardContent className="p-5 text-center">
+                    <Avatar className="mx-auto h-20 w-20 ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
                       <AvatarImage src={member.imageUrl || undefined} alt={member.fullName} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                      <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
                         {getInitials(member.fullName)}
                       </AvatarFallback>
                     </Avatar>
-                    <h3 className="mt-4 font-semibold text-foreground text-lg">{member.fullName}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{member.department}</p>
+                    <h3 className="mt-3 font-semibold text-foreground">{member.fullName}</h3>
+                    <p className="text-xs text-muted-foreground">{member.department}</p>
                     {member.role && (
-                      <Badge variant="secondary" className="mt-3">
-                        {member.role}
-                      </Badge>
+                      <div className="mt-3">
+                        <Badge variant="secondary" className="text-xs">
+                          {member.role}
+                        </Badge>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
