@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Plus, Search, Download, Upload, MoreVertical, Edit, Trash2, LogIn, LogOut, Loader2, FileSpreadsheet } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -40,6 +43,19 @@ export default function CommitteePage() {
   const [members, setMembers] = useState<CommitteeMember[]>([])
   const [teamCount, setTeamCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingMember, setEditingMember] = useState<CommitteeMember | null>(null)
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    role: "",
+    roleOrder: 999,
+    department: "",
+    whatsappNumber: "",
+    email: "",
+    assignedTeam: "",
+    experienceLevel: "",
+    isApproved: false,
+  })
 
   useEffect(() => {
     if (isAuthenticated && token) {
@@ -140,6 +156,71 @@ export default function CommitteePage() {
     } catch (error) {
       console.error("Failed to delete member:", error)
       toast.error("Failed to delete member")
+    }
+  }
+
+  const handleEdit = (member: CommitteeMember) => {
+    setEditingMember(member)
+    setEditForm({
+      fullName: member.fullName,
+      role: member.role || "",
+      roleOrder: member.roleOrder,
+      department: member.department,
+      whatsappNumber: member.whatsappNumber,
+      email: member.email || "",
+      assignedTeam: member.assignedTeam || "",
+      experienceLevel: member.experienceLevel,
+      isApproved: member.isApproved,
+    })
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingMember) return
+
+    try {
+      const response = await fetch(`${API_URL}/api/committee/${editingMember.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editForm),
+      })
+      const data = await response.json()
+      if (data.status === "success") {
+        toast.success("Member updated successfully")
+        setEditDialogOpen(false)
+        setEditingMember(null)
+        fetchMembers()
+      }
+    } catch (error) {
+      console.error("Failed to update member:", error)
+      toast.error("Failed to update member")
+    }
+  }
+
+  const handleApprovalToggle = async () => {
+    if (!editingMember) return
+
+    try {
+      const response = await fetch(`${API_URL}/api/committee/${editingMember.id}/approval`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isApproved: !editForm.isApproved }),
+      })
+      const data = await response.json()
+      if (data.status === "success") {
+        setEditForm({ ...editForm, isApproved: !editForm.isApproved })
+        toast.success(`Member ${!editForm.isApproved ? "approved" : "unapproved"}`)
+        fetchMembers()
+      }
+    } catch (error) {
+      console.error("Failed to toggle approval:", error)
+      toast.error("Failed to toggle approval")
     }
   }
 
@@ -391,7 +472,7 @@ export default function CommitteePage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(member)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
@@ -450,7 +531,7 @@ export default function CommitteePage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(member)}>
                           <Edit className="mr-2 h-3.5 w-3.5" />
                           Edit
                         </DropdownMenuItem>
@@ -497,6 +578,118 @@ export default function CommitteePage() {
             ))
           )}
         </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Committee Member</DialogTitle>
+              <DialogDescription>
+                Update member details, assign role and display order
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={editForm.fullName}
+                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="role">Role</Label>
+                <Input
+                  id="role"
+                  placeholder="e.g., Main Organizer, Event Coordinator"
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="roleOrder">Display Order</Label>
+                <Input
+                  id="roleOrder"
+                  type="number"
+                  placeholder="1 = first, 2 = second, etc."
+                  value={editForm.roleOrder}
+                  onChange={(e) => setEditForm({ ...editForm, roleOrder: parseInt(e.target.value) || 999 })}
+                />
+                <p className="text-xs text-muted-foreground">Lower numbers appear first (1, 2, 3...)</p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="department">Department</Label>
+                <Input
+                  id="department"
+                  value={editForm.department}
+                  onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                <Input
+                  id="whatsappNumber"
+                  value={editForm.whatsappNumber}
+                  onChange={(e) => setEditForm({ ...editForm, whatsappNumber: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="assignedTeam">Assigned Team</Label>
+                <Input
+                  id="assignedTeam"
+                  value={editForm.assignedTeam}
+                  onChange={(e) => setEditForm({ ...editForm, assignedTeam: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="experienceLevel">Experience Level</Label>
+                <select
+                  id="experienceLevel"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={editForm.experienceLevel}
+                  onChange={(e) => setEditForm({ ...editForm, experienceLevel: e.target.value })}
+                >
+                  <option value="BEGINNER">Beginner</option>
+                  <option value="INTERMEDIATE">Intermediate</option>
+                  <option value="ADVANCED">Advanced</option>
+                  <option value="PROFESSIONAL">Professional</option>
+                </select>
+              </div>
+              {isSuperAdmin && (
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="isApproved">Approved for Public Page</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show this member on the public OC Members page
+                    </p>
+                  </div>
+                  <Switch
+                    id="isApproved"
+                    checked={editForm.isApproved}
+                    onCheckedChange={handleApprovalToggle}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </ResponsiveLayout>
   )
