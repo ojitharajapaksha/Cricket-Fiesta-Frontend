@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, ScanLine, Loader2, Mail, Send } from "lucide-react"
+import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, ScanLine, Loader2, Mail, Send, FileSpreadsheet } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
+import * as XLSX from "xlsx"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -200,6 +201,51 @@ export default function FoodPage() {
   const vegCount = registrations.filter((r) => r.foodPreference === "VEGETARIAN").length
   const nonVegCount = registrations.filter((r) => r.foodPreference === "NON_VEGETARIAN").length
 
+  // Export food registrations to Excel
+  const handleExportToExcel = () => {
+    try {
+      const exportData = filteredRegistrations.map((reg, index) => ({
+        "No.": index + 1,
+        "Trainee ID": reg.traineeId,
+        "Full Name": reg.fullName,
+        "Department": reg.department,
+        "Project": reg.projectName || "Not Entered",
+        "Email": reg.email || "-",
+        "Contact Number": reg.contactNumber,
+        "Food Preference": reg.foodPreference === "VEGETARIAN" ? "Vegetarian" : "Non-Vegetarian",
+        "Collected": reg.foodCollected ? "Yes" : "No",
+        "Collected At": reg.foodCollectedAt ? new Date(reg.foodCollectedAt).toLocaleString() : "-",
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      ws["!cols"] = [
+        { wch: 5 },   // No.
+        { wch: 15 },  // Trainee ID
+        { wch: 25 },  // Full Name
+        { wch: 20 },  // Department
+        { wch: 20 },  // Project
+        { wch: 25 },  // Email
+        { wch: 15 },  // Contact Number
+        { wch: 15 },  // Food Preference
+        { wch: 12 },  // Collected
+        { wch: 20 },  // Collected At
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, "Food Registrations");
+
+      const date = new Date().toISOString().split("T")[0];
+      const filename = `food_registrations_export_${date}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+      toast.success(`Exported ${filteredRegistrations.length} registrations to ${filename}`);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Failed to export food registrations");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -249,10 +295,17 @@ export default function FoodPage() {
                 </Button>
               </Link>
             )}
-            <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
-              <Download className="h-3 w-3 lg:h-4 lg:w-4" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
+            {isSuperAdmin && (
+              <Button 
+                variant="outline" 
+                className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" 
+                size="sm"
+                onClick={handleExportToExcel}
+              >
+                <FileSpreadsheet className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            )}
             {isSuperAdmin && (
               <Link href="/food/new">
                 <Button className="gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">

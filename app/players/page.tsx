@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, UserCheck, Loader2, RefreshCw, Building2, ShieldCheck, ShieldX } from "lucide-react"
+import { Plus, Search, Download, Upload, MoreVertical, QrCode, Edit, Trash2, UserCheck, Loader2, RefreshCw, Building2, ShieldCheck, ShieldX, FileSpreadsheet } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
+import * as XLSX from "xlsx"
 
 interface Player {
   id: string;
@@ -183,6 +184,65 @@ export default function PlayersPage() {
   const unassignedCount = players.filter((p) => !p.teamId && !p.team).length
   const approvedCount = players.filter((p) => p.isApproved).length
 
+  // Export players to Excel
+  const handleExportToExcel = () => {
+    try {
+      // Prepare data for export
+      const exportData = filteredPlayers.map((player, index) => ({
+        "No.": index + 1,
+        "Trainee ID": player.traineeId,
+        "Full Name": player.fullName,
+        "Gender": player.gender,
+        "Department": player.department,
+        "Project": player.projectName || "Not Entered",
+        "Position": player.position.replace("_", " "),
+        "Experience Level": player.experienceLevel,
+        "Contact Number": player.contactNumber,
+        "Team": player.team?.name || "Unassigned",
+        "Attendance": player.attended ? "Yes" : "No",
+        "Attended At": player.attendedAt ? new Date(player.attendedAt).toLocaleString() : "-",
+        "Public Approved": player.isApproved ? "Yes" : "No",
+      }));
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths
+      const colWidths = [
+        { wch: 5 },   // No.
+        { wch: 15 },  // Trainee ID
+        { wch: 25 },  // Full Name
+        { wch: 10 },  // Gender
+        { wch: 20 },  // Department
+        { wch: 20 },  // Project
+        { wch: 15 },  // Position
+        { wch: 15 },  // Experience Level
+        { wch: 15 },  // Contact Number
+        { wch: 15 },  // Team
+        { wch: 12 },  // Attendance
+        { wch: 20 },  // Attended At
+        { wch: 15 },  // Public Approved
+      ];
+      ws["!cols"] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Players");
+
+      // Generate filename with date
+      const date = new Date().toISOString().split("T")[0];
+      const filename = `players_export_${date}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      toast.success(`Exported ${filteredPlayers.length} players to ${filename}`);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Failed to export players");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -220,10 +280,18 @@ export default function PlayersPage() {
                 </Button>
               </Link>
             )}
-            <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
-              <Download className="h-3 w-3 lg:h-4 lg:w-4" />
-              Export
-            </Button>
+            {isSuperAdmin && (
+              <Button 
+                variant="outline" 
+                className="gap-2 bg-transparent text-xs lg:text-sm" 
+                size="sm"
+                onClick={handleExportToExcel}
+              >
+                <FileSpreadsheet className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline">Export Excel</span>
+                <span className="sm:hidden">Export</span>
+              </Button>
+            )}
             {isSuperAdmin && (
               <Link href="/players/new">
                 <Button className="gap-2 text-xs lg:text-sm" size="sm">

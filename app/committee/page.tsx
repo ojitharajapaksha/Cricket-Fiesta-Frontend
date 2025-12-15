@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Download, Upload, MoreVertical, Edit, Trash2, LogIn, LogOut, Loader2 } from "lucide-react"
+import { Plus, Search, Download, Upload, MoreVertical, Edit, Trash2, LogIn, LogOut, Loader2, FileSpreadsheet } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
+import * as XLSX from "xlsx"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
@@ -149,6 +150,51 @@ export default function CommitteePage() {
   const checkedInCount = members.filter((m) => m.checkedIn).length
   const experiencedCount = members.filter((m) => m.experienceLevel === "EXTENSIVE").length
 
+  // Export committee members to Excel
+  const handleExportToExcel = () => {
+    try {
+      const exportData = filteredMembers.map((member, index) => ({
+        "No.": index + 1,
+        "Full Name": member.fullName,
+        "Department": member.department,
+        "WhatsApp Number": member.whatsappNumber,
+        "Email": member.email || "-",
+        "Assigned Team": member.assignedTeam || "Unassigned",
+        "Experience Level": member.experienceLevel,
+        "Checked In": member.checkedIn ? "Yes" : "No",
+        "Check In Time": member.checkInTime ? new Date(member.checkInTime).toLocaleString() : "-",
+        "Check Out Time": member.checkOutTime ? new Date(member.checkOutTime).toLocaleString() : "-",
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      ws["!cols"] = [
+        { wch: 5 },   // No.
+        { wch: 25 },  // Full Name
+        { wch: 20 },  // Department
+        { wch: 15 },  // WhatsApp Number
+        { wch: 25 },  // Email
+        { wch: 15 },  // Assigned Team
+        { wch: 15 },  // Experience Level
+        { wch: 12 },  // Checked In
+        { wch: 20 },  // Check In Time
+        { wch: 20 },  // Check Out Time
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, "Committee");
+
+      const date = new Date().toISOString().split("T")[0];
+      const filename = `committee_export_${date}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+      toast.success(`Exported ${filteredMembers.length} committee members to ${filename}`);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Failed to export committee members");
+    }
+  };
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -184,10 +230,17 @@ export default function CommitteePage() {
                 </Button>
               </Link>
             )}
-            <Button variant="outline" className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" size="sm">
-              <Download className="h-3 w-3 lg:h-4 lg:w-4" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
+            {isSuperAdmin && (
+              <Button 
+                variant="outline" 
+                className="gap-1.5 bg-transparent text-xs lg:gap-2 lg:text-sm" 
+                size="sm"
+                onClick={handleExportToExcel}
+              >
+                <FileSpreadsheet className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            )}
             {isSuperAdmin && (
               <Link href="/committee/new">
                 <Button className="gap-1.5 text-xs lg:gap-2 lg:text-sm" size="sm">
