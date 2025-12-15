@@ -119,6 +119,12 @@ interface CommitteeInfo {
 }
 
 const departmentColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f97316", "#ec4899", "#14b8a6", "#eab308", "#06b6d4"];
+const projectColors = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e", "#f97316", "#eab308", "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6"];
+
+interface ProjectData {
+  project: string;
+  count: number;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -128,6 +134,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
   const [foodData, setFoodData] = useState<FoodPreference[]>([]);
+  const [projectData, setProjectData] = useState<ProjectData[]>([]);
   const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
   const [committeeInfo, setCommitteeInfo] = useState<CommitteeInfo | null>(null);
   const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([]);
@@ -265,10 +272,11 @@ export default function DashboardPage() {
         Authorization: `Bearer ${token}`,
       };
 
-      const [statsRes, deptRes, foodRes] = await Promise.all([
+      const [statsRes, deptRes, foodRes, projectRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/stats`, { headers }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/registration-by-department`, { headers }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/food-preferences`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/players-by-project`, { headers }),
       ]);
 
       if (statsRes.ok) {
@@ -284,6 +292,11 @@ export default function DashboardPage() {
       if (foodRes.ok) {
         const foodResData = await foodRes.json();
         setFoodData(foodResData.data);
+      }
+
+      if (projectRes.ok) {
+        const projectResData = await projectRes.json();
+        setProjectData(projectResData.data);
       }
 
       // Fetch committee info if user is an OC member (ADMIN role)
@@ -871,37 +884,50 @@ export default function DashboardPage() {
           {/* Charts Row */}
           <div className="mb-4 grid gap-4 lg:mb-6 lg:grid-cols-2 lg:gap-6">
             {/* Department Distribution */}
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader className="p-3 lg:p-6">
                 <CardTitle className="text-sm lg:text-base">Players by Department</CardTitle>
                 <CardDescription className="text-xs lg:text-sm">Distribution of registered players</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
                 {departmentData.length > 0 ? (
-                  <ChartContainer
-                    config={{
-                      count: {
-                        label: "Players",
-                        color: "hsl(var(--primary))",
-                      },
-                    }}
-                    className="h-[200px] lg:h-[300px]"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={departmentData}>
-                        <XAxis dataKey="department" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]}>
-                          {departmentData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={departmentColors[index % departmentColors.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                  <div className="w-full" style={{ minWidth: 0 }}>
+                    <ChartContainer
+                      config={{
+                        count: {
+                          label: "Players",
+                          color: "hsl(var(--primary))",
+                        },
+                      }}
+                      className="h-[200px] w-full sm:h-[250px] lg:h-[300px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={departmentData} 
+                          margin={{ left: 0, right: 10, top: 10, bottom: 60 }}
+                        >
+                          <XAxis 
+                            dataKey="department" 
+                            tick={{ fontSize: 9 }} 
+                            angle={-45} 
+                            textAnchor="end" 
+                            height={60} 
+                            interval={0}
+                            tickMargin={5}
+                          />
+                          <YAxis tick={{ fontSize: 10 }} width={35} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]}>
+                            {departmentData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={departmentColors[index % departmentColors.length]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
                 ) : (
-                  <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground lg:h-[300px]">
+                  <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground sm:h-[250px] lg:h-[300px]">
                     No department data available
                   </div>
                 )}
@@ -909,57 +935,121 @@ export default function DashboardPage() {
             </Card>
 
             {/* Food Preference */}
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader className="p-3 lg:p-6">
                 <CardTitle className="text-sm lg:text-base">Food Preferences</CardTitle>
                 <CardDescription className="text-xs lg:text-sm">Vegetarian vs Non-Vegetarian</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
                 {foodData.length > 0 ? (
-                  <ChartContainer
-                    config={{
-                      VEGETARIAN: {
-                        label: "Vegetarian",
-                        color: "#10b981",
-                      },
-                      NON_VEGETARIAN: {
-                        label: "Non-Vegetarian",
-                        color: "#ef4444",
-                      },
-                    }}
-                    className="h-[200px] lg:h-[300px]"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={foodData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ preference, count }) => `${preference === "VEGETARIAN" ? "Veg" : "Non-Veg"}: ${count}`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="count"
-                        >
-                          {foodData.map((entry, index) => (
-                            <Cell 
-                              key={`cell-${index}`} 
-                              fill={entry.preference === "VEGETARIAN" ? "#10b981" : "#ef4444"} 
-                            />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                  <div className="w-full" style={{ minWidth: 0 }}>
+                    <ChartContainer
+                      config={{
+                        VEGETARIAN: {
+                          label: "Vegetarian",
+                          color: "#10b981",
+                        },
+                        NON_VEGETARIAN: {
+                          label: "Non-Vegetarian",
+                          color: "#ef4444",
+                        },
+                      }}
+                      className="mx-auto h-[200px] w-full max-w-[300px] sm:h-[250px] sm:max-w-[350px] lg:h-[300px] lg:max-w-[400px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={foodData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ preference, count }) => `${preference === "VEGETARIAN" ? "Veg" : "Non-Veg"}: ${count}`}
+                            outerRadius="65%"
+                            fill="#8884d8"
+                            dataKey="count"
+                          >
+                            {foodData.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.preference === "VEGETARIAN" ? "#10b981" : "#ef4444"} 
+                              />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
                 ) : (
-                  <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground lg:h-[300px]">
+                  <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground sm:h-[250px] lg:h-[300px]">
                     No food preference data available
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
+
+          {/* Project Distribution Chart - Super Admin Only */}
+          {isSuperAdmin && projectData.length > 0 && (
+            <Card className="mb-4 overflow-hidden lg:mb-6">
+              <CardHeader className="p-3 lg:p-6">
+                <CardTitle className="flex items-center gap-2 text-sm lg:text-base">
+                  <Building2 className="h-4 w-4" />
+                  Players by Project
+                </CardTitle>
+                <CardDescription className="text-xs lg:text-sm">
+                  Distribution of approved players across SLT projects
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 pt-0 lg:p-6 lg:pt-0">
+                <div className="w-full" style={{ minWidth: 0 }}>
+                  <ChartContainer
+                    config={projectData.reduce((acc, item, index) => ({
+                      ...acc,
+                      [item.project]: {
+                        label: item.project,
+                        color: projectColors[index % projectColors.length],
+                      },
+                    }), {})}
+                    className="h-[220px] w-full sm:h-[280px] lg:h-[350px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={projectData} 
+                        layout="vertical" 
+                        margin={{ left: 5, right: 35, top: 5, bottom: 5 }}
+                      >
+                        <XAxis type="number" hide />
+                        <YAxis 
+                          type="category" 
+                          dataKey="project" 
+                          width={100}
+                          tick={{ fontSize: 10 }}
+                          tickFormatter={(value) => value.length > 14 ? `${value.slice(0, 14)}...` : value}
+                        />
+                        <ChartTooltip 
+                          content={<ChartTooltipContent />}
+                          formatter={(value, name, props) => [`${value} players`, props.payload.project]}
+                        />
+                        <Bar 
+                          dataKey="count" 
+                          radius={[0, 4, 4, 0]}
+                          label={{ position: 'right', fontSize: 10 }}
+                        >
+                          {projectData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.project === 'Not Entered' ? '#9ca3af' : projectColors[index % projectColors.length]} 
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Attendance Timeline - Removed as it requires real-time tracking */}
           

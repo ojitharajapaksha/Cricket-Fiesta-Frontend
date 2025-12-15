@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trophy, Users, Home, ArrowLeft, Search, UserCircle } from "lucide-react"
+import { Trophy, Users, Home, ArrowLeft, Search, UserCircle, Building2 } from "lucide-react"
 
 interface Player {
   id: string
@@ -20,6 +20,7 @@ interface Player {
   bowlingStyle: string | null
   experienceLevel: string
   profileImage: string | null
+  projectName: string | null
   team: {
     id: string
     name: string
@@ -283,6 +284,13 @@ export default function PlayersPublicPage() {
                     </Avatar>
                     <h3 className="mt-3 font-semibold text-foreground">{player.fullName}</h3>
                     <p className="text-xs text-muted-foreground">{player.department}</p>
+                    
+                    {player.projectName && (
+                      <div className="mt-1.5 flex items-center justify-center gap-1 text-xs text-primary/80">
+                        <Building2 className="h-3 w-3" />
+                        <span className="truncate max-w-[140px]">{player.projectName}</span>
+                      </div>
+                    )}
                     
                     <div className="mt-3 flex flex-wrap justify-center gap-1.5">
                       <Badge variant="outline" className="text-xs">

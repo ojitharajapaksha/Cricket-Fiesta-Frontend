@@ -83,7 +83,7 @@ export function AppSidebar() {
   }, []);
 
   // Get navigation items based on user role
-  const navigation = user ? navigationByRole[user.role] : navigationByRole.ADMIN;
+  const navigation = user && navigationByRole[user.role] ? navigationByRole[user.role] : navigationByRole.ADMIN;
   const displayName = user 
     ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0]
     : 'Admin User';
@@ -273,7 +273,7 @@ export function MobileHeader() {
     }
   }, []);
 
-  const navigation = user ? navigationByRole[user.role] : navigationByRole.ADMIN;
+  const navigation = user && navigationByRole[user.role] ? navigationByRole[user.role] : navigationByRole.ADMIN;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
