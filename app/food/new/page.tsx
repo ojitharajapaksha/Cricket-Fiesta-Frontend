@@ -29,7 +29,7 @@ export default function NewFoodRegistrationPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Creating food registration:", formData)
+    console.log("Creating food registration:", formData)
     // TODO: Implement API call to create registration and generate QR code
     router.push("/food")
   }

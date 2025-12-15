@@ -35,7 +35,7 @@ export default function NewCommitteeMemberPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Creating committee member:", formData)
+    console.log("Creating committee member:", formData)
     // TODO: Implement API call to create committee member
     router.push("/committee")
   }
