@@ -136,6 +136,28 @@ export default function PlayersPage() {
     toast.success("Data refreshed");
   }
 
+  const handleMigration = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/migrate/link-users-players`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Migration failed");
+
+      const data = await response.json();
+      toast.success(data.message || "Migration completed successfully");
+      
+      // Refresh the players list to show updated data
+      await fetchPlayers();
+    } catch (error: any) {
+      console.error("Error running migration:", error);
+      toast.error(error.message || "Failed to run migration");
+    }
+  }
+
   const handleToggleApproval = async (playerId: string, currentStatus: boolean) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/players/${playerId}/approve`, {
@@ -271,6 +293,18 @@ export default function PlayersPage() {
               <RefreshCw className={`h-3 w-3 lg:h-4 lg:w-4 ${refreshing ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">{refreshing ? "Refreshing..." : "Refresh"}</span>
             </Button>
+            {isSuperAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 bg-orange-500/10 text-orange-600 border-orange-500/30 hover:bg-orange-500/20 text-xs lg:text-sm"
+                onClick={handleMigration}
+                title="Fix missing project names by linking users to players"
+              >
+                <Building2 className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline">Fix Projects</span>
+              </Button>
+            )}
             {isSuperAdmin && (
               <Link href="/players/bulk-import">
                 <Button variant="outline" className="gap-2 bg-transparent text-xs lg:text-sm" size="sm">
