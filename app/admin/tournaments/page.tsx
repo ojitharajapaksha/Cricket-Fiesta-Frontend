@@ -35,6 +35,8 @@ import {
 import { toast } from "sonner";
 import { Plus, Trophy, Calendar, Users, Edit, Trash2, PlayCircle } from "lucide-react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 interface Tournament {
   id: string;
   name: string;
@@ -81,7 +83,7 @@ export default function TournamentsPage() {
   const fetchTournaments = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/tournaments", {
+      const response = await fetch(`${API_URL}/api/tournaments`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -104,7 +106,7 @@ export default function TournamentsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/tournaments", {
+      const response = await fetch(`${API_URL}/api/tournaments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -154,7 +156,7 @@ export default function TournamentsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/tournaments/${id}`, {
+      const response = await fetch(`${API_URL}/api/tournaments/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

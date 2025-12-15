@@ -35,6 +35,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Users, Trophy, Calendar, PlayCircle, Trash2 } from "lucide-react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 interface Tournament {
   id: string;
   name: string;
@@ -80,7 +82,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const fetchTournament = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/tournaments/${resolvedParams.id}`, {
+      const response = await fetch(`${API_URL}/api/tournaments/${resolvedParams.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -101,7 +103,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const fetchAllTeams = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/teams", {
+      const response = await fetch(`${API_URL}/api/teams`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -127,7 +129,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/tournaments/${resolvedParams.id}/teams`, {
+      const response = await fetch(`${API_URL}/api/tournaments/${resolvedParams.id}/teams`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,7 +161,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/api/tournaments/${resolvedParams.id}/teams/${teamId}`,
+        `${API_URL}/api/tournaments/${resolvedParams.id}/teams/${teamId}`,
         {
           method: "DELETE",
           headers: {
@@ -185,7 +187,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/api/tournaments/${resolvedParams.id}/generate-matches`,
+        `${API_URL}/api/tournaments/${resolvedParams.id}/generate-matches`,
         {
           method: "POST",
           headers: {
@@ -216,7 +218,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const handleUpdateStatus = async (newStatus: string) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/tournaments/${resolvedParams.id}`, {
+      const response = await fetch(`${API_URL}/api/tournaments/${resolvedParams.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

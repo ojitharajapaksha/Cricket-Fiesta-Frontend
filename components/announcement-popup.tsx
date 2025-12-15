@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { X, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 interface Announcement {
   id: string
@@ -84,6 +84,9 @@ export function AnnouncementPopup() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-fit max-w-[95vw] p-0 overflow-hidden border-4 border-gray-200 bg-white rounded-xl shadow-2xl [&>button]:hidden">
         <DialogTitle className="sr-only">{current.title}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {current.content || 'Announcement details'}
+        </DialogDescription>
         
         {/* Close X button in top right */}
         <button

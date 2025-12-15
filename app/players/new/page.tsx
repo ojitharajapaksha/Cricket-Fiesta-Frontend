@@ -31,7 +31,7 @@ export default function NewPlayerPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Creating player:", formData)
+    console.log("Creating player:", formData)
     // TODO: Implement API call to create player
     router.push("/players")
   }
