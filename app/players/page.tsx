@@ -160,7 +160,7 @@ export default function PlayersPage() {
 
   const handleToggleApproval = async (playerId: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/players/${playerId}/approve`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/players/${playerId}/approval`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
