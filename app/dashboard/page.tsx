@@ -146,6 +146,7 @@ export default function DashboardPage() {
   const [projectNameInput, setProjectNameInput] = useState('');
   const [savingProjectName, setSavingProjectName] = useState(false);
 
+  // Check for missing project name only once on mount
   useEffect(() => {
     if (!isAuthenticated || !token || !user) return;
     
@@ -154,6 +155,11 @@ export default function DashboardPage() {
     if (user.role === 'USER' && !user.projectName && user.userType === 'player') {
       setShowProjectNameModal(true);
     }
+  }, [isAuthenticated, token, user?.id]); // Only re-run if user ID changes (different login)
+
+  // Fetch dashboard data
+  useEffect(() => {
+    if (!isAuthenticated || !token || !user) return;
     
     if (user.role === 'USER') {
       fetchPlayerDashboard(user as UserData);

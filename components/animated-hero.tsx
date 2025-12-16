@@ -158,7 +158,7 @@ export function AnimatedHero({ eventDate }: AnimatedHeroProps) {
             variants={itemVariants}
             className="mb-6 text-balance text-sm leading-relaxed text-muted-foreground sm:text-base lg:mb-8 lg:text-xl"
           >
-            Comprehensive event management system for 200+ participants. Handle registrations, food distribution,
+            Comprehensive event management system for 150+ participants. Handle registrations, food distribution,
             match scheduling, and live scoring all in one place.
           </motion.p>
 

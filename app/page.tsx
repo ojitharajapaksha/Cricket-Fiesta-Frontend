@@ -122,7 +122,7 @@ export default function HomePage() {
               </div>
               <CardTitle className="text-base lg:text-xl">Food Distribution</CardTitle>
               <CardDescription className="text-xs lg:text-sm">
-                QR code-based meal distribution system for 200+ participants with real-time tracking
+                QR code-based meal distribution system for 150+ participants with real-time tracking
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 lg:p-6 lg:pt-0">
