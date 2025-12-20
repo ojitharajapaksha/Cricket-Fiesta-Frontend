@@ -111,8 +111,17 @@ export default function LastLoginsPage() {
       }
 
       const data = await response.json()
-      setUsers(data.data)
-      setFilteredUsers(data.data)
+      // Sort by lastLoginAt in descending order (most recent first)
+      const sortedUsers = data.data.sort((a: UserLoginInfo, b: UserLoginInfo) => {
+        // Handle null values - put them at the end
+        if (!a.lastLoginAt && !b.lastLoginAt) return 0
+        if (!a.lastLoginAt) return 1
+        if (!b.lastLoginAt) return -1
+        // Compare dates in descending order
+        return new Date(b.lastLoginAt).getTime() - new Date(a.lastLoginAt).getTime()
+      })
+      setUsers(sortedUsers)
+      setFilteredUsers(sortedUsers)
     } catch (error) {
       console.error('Error fetching last logins:', error)
       toast.error('Failed to load last login data')
