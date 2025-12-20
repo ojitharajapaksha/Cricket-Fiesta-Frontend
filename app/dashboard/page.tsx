@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck, QrCode, Building2, ExternalLink, Gamepad2, UserCircle, ChevronRight } from "lucide-react"
+import { Users, UtensilsCrossed, Trophy, Award, Activity, Calendar, Clock, CheckCircle2, Loader2, XCircle, UserCheck, QrCode, Building2, ExternalLink, Gamepad2, UserCircle, ChevronRight, MessageCircle } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -453,6 +453,15 @@ export default function DashboardPage() {
                     Cricket Fiesta 2026 • {isTraineeOnly ? 'Trainee' : playerInfo?.team?.name || 'Player'}
                   </p>
                 </div>
+                <a
+                  href="https://chat.whatsapp.com/Ii4mTNaDrPu6uETO9Jgp4s"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-full bg-green-500 hover:bg-green-600 px-3 py-2 lg:px-4 lg:py-2.5 text-white shadow-md transition-colors"
+                >
+                  <MessageCircle className="h-4 w-4 lg:h-5 lg:w-5" />
+                  <span className="hidden sm:inline text-xs lg:text-sm font-medium">Join WhatsApp</span>
+                </a>
               </div>
             </div>
           </div>
@@ -764,9 +773,20 @@ export default function DashboardPage() {
               <h1 className="mb-1 text-2xl font-bold text-foreground lg:mb-2 lg:text-3xl">Dashboard</h1>
               <p className="text-sm text-muted-foreground lg:text-base">Welcome to the SLT Trainees Cricket Fiesta event management</p>
             </div>
-            <div className="flex items-center gap-2 self-start rounded-lg border border-border bg-card px-3 py-1.5 sm:px-4 sm:py-2">
-              <Activity className="h-4 w-4 text-green-500" />
-              <span className="text-xs font-medium sm:text-sm">Event Active</span>
+            <div className="flex items-center gap-2">
+              <a
+                href="https://chat.whatsapp.com/Ii4mTNaDrPu6uETO9Jgp4s"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-full bg-green-500 hover:bg-green-600 px-3 py-2 lg:px-4 lg:py-2.5 text-white shadow-md transition-colors"
+              >
+                <MessageCircle className="h-4 w-4 lg:h-5 lg:w-5" />
+                <span className="hidden sm:inline text-xs lg:text-sm font-medium">Join WhatsApp</span>
+              </a>
+              <div className="flex items-center gap-2 self-start rounded-lg border border-border bg-card px-3 py-1.5 sm:px-4 sm:py-2">
+                <Activity className="h-4 w-4 text-green-500" />
+                <span className="text-xs font-medium sm:text-sm">Event Active</span>
+              </div>
             </div>
           </div>
         </div>
