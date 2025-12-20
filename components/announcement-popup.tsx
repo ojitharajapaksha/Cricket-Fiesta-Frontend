@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -18,27 +18,26 @@ interface Announcement {
   endDate: string | null
 }
 
+
 export function AnnouncementPopup() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
+  // Auto slider interval ref
+  const autoSlideRef = React.useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
         // Clear previous dismissals on each page load so popup shows on refresh
         sessionStorage.removeItem('dismissedAnnouncements')
-        
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/announcements/active`)
-        
         if (!response.ok) {
           console.error('Failed to fetch announcements:', response.status)
           return
         }
-        
         const data = await response.json()
         console.log('Announcements response:', data)
-        
         if (data.status === 'success' && data.data && data.data.length > 0) {
           setAnnouncements(data.data)
           setIsOpen(true)
@@ -47,10 +46,23 @@ export function AnnouncementPopup() {
         console.error('Failed to fetch announcements:', error)
       }
     }
-
-    // Fetch immediately
     fetchAnnouncements()
   }, [])
+
+  // Auto slider effect
+  useEffect(() => {
+    if (announcements.length > 1 && isOpen) {
+      autoSlideRef.current = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % announcements.length)
+      }, 5000) // 5 seconds
+      return () => {
+        if (autoSlideRef.current) clearInterval(autoSlideRef.current)
+      }
+    } else {
+      if (autoSlideRef.current) clearInterval(autoSlideRef.current)
+    }
+    return undefined
+  }, [announcements.length, isOpen])
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? announcements.length - 1 : prev - 1))
