@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trophy, Users, Home, ArrowLeft, Search, UserCircle, Building2 } from "lucide-react"
+import { Users, Home, Search, UserCircle, Building2 } from "lucide-react"
 
 interface Player {
   id: string
@@ -111,9 +112,13 @@ export default function PlayersPublicPage() {
         <div className="container mx-auto px-3 py-3 lg:px-4 lg:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 lg:gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary lg:h-10 lg:w-10">
-                <Trophy className="h-4 w-4 text-primary-foreground lg:h-6 lg:w-6" />
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Cricket Fiesta Logo"
+                width={40}
+                height={40}
+                className="h-8 w-8 lg:h-10 lg:w-10 object-contain"
+              />
               <div>
                 <h1 className="text-base font-bold text-foreground lg:text-xl">Cricket Fiesta</h1>
                 <p className="text-[10px] text-muted-foreground lg:text-xs">SLT Trainees 2026</p>

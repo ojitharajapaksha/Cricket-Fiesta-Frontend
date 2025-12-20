@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, ExternalLink } from "lucide-react"
+import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
@@ -22,7 +22,6 @@ export function AnnouncementPopup() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -53,23 +52,16 @@ export function AnnouncementPopup() {
     fetchAnnouncements()
   }, [])
 
-  const handleDismiss = () => {
-    if (announcements.length > 0) {
-      const currentId = announcements[currentIndex].id
-      const newDismissed = new Set(dismissed)
-      newDismissed.add(currentId)
-      setDismissed(newDismissed)
-      
-      const dismissedIds = JSON.parse(sessionStorage.getItem('dismissedAnnouncements') || '[]')
-      dismissedIds.push(currentId)
-      sessionStorage.setItem('dismissedAnnouncements', JSON.stringify(dismissedIds))
-      
-      if (currentIndex < announcements.length - 1) {
-        setCurrentIndex(currentIndex + 1)
-      } else {
-        setIsOpen(false)
-      }
-    }
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev === 0 ? announcements.length - 1 : prev - 1))
+  }
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % announcements.length)
+  }
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index)
   }
 
   const handleClose = () => {
@@ -96,13 +88,33 @@ export function AnnouncementPopup() {
           <X className="h-4 w-4 text-gray-600" />
         </button>
 
+        {/* Left Arrow - only show if multiple announcements */}
+        {announcements.length > 1 && (
+          <button
+            onClick={handlePrev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 hover:bg-black/70 text-white shadow-lg transition-colors"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+        )}
+
+        {/* Right Arrow - only show if multiple announcements */}
+        {announcements.length > 1 && (
+          <button
+            onClick={handleNext}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 hover:bg-black/70 text-white shadow-lg transition-colors"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        )}
+
         {/* Image */}
         {current.imageUrl && (
           <div className="relative">
             <img
               src={current.imageUrl}
               alt={current.title}
-              className="w-auto max-w-[90vw] max-h-[75vh] object-contain"
+              className="w-auto max-w-[90vw] max-h-[70vh] object-contain"
             />
           </div>
         )}
@@ -130,10 +142,34 @@ export function AnnouncementPopup() {
           </div>
         )}
 
-        {/* Close button at bottom */}
-        <div className="flex justify-center py-3 bg-white border-t border-gray-200">
+        {/* Dots indicator and Close button */}
+        <div className="flex flex-col items-center gap-2 py-3 bg-white border-t border-gray-200">
+          {/* Dots indicator - only show if multiple announcements */}
+          {announcements.length > 1 && (
+            <div className="flex justify-center gap-2">
+              {announcements.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`h-2.5 rounded-full transition-all ${
+                    index === currentIndex 
+                      ? 'w-6 bg-primary' 
+                      : 'w-2.5 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* Counter text */}
+          {announcements.length > 1 && (
+            <p className="text-xs text-gray-500">
+              {currentIndex + 1} of {announcements.length}
+            </p>
+          )}
+
           <Button
-            onClick={handleDismiss}
+            onClick={handleClose}
             className="px-10 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-full font-medium shadow-md hover:shadow-lg transition-all"
           >
             Close
