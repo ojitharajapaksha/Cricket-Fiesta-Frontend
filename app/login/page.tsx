@@ -164,8 +164,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-6 text-center lg:mb-8">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary lg:mb-4 lg:h-16 lg:w-16 lg:rounded-2xl">
-            <Trophy className="h-6 w-6 text-primary-foreground lg:h-8 lg:w-8" />
+          <div className="mx-auto mb-3 flex items-center justify-center">
+            <img
+              src="/logo.png"
+              alt="Cricket Fiesta Logo"
+              width={96}
+              height={96}
+              className="h-20 w-20 lg:h-24 lg:w-24 object-contain"
+            />
           </div>
           <h1 className="text-xl font-bold text-foreground lg:text-2xl">Cricket Fiesta</h1>
           <p className="text-xs text-muted-foreground lg:text-sm">Event Management System</p>
