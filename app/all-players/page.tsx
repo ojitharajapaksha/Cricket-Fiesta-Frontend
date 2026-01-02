@@ -332,7 +332,7 @@ export default function PlayersPublicPage() {
       {/* Footer */}
       <footer className="border-t border-border bg-card py-6 lg:py-8">
         <div className="container mx-auto px-3 text-center text-xs text-muted-foreground lg:px-4 lg:text-sm flex flex-col items-center gap-1">
-          <p>© 2025 SLT Trainees Cricket Fiesta | All rights reserved</p>
+          <p>© 2026 SLT Trainees Cricket Fiesta | All rights reserved</p>
           <p>
             Design &amp; Developed by{' '}
             <a
